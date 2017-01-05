@@ -1,0 +1,398 @@
+<script type="text/javascript" >
+  var reports_analysis = <%= @reports_analysis.html_safe %>
+  var units = <%= @units.html_safe %>
+  var used_sports = <%= @used_sports %>
+</script>
+<script type="text/babel">
+
+var LeftPanel = React.createClass({
+    render() {
+      return (
+        <div className="col-md-2 left-panel">
+          <ul className="report-list">
+            <li >
+              <a href="/activities/reports_table">Activity Data Table</a>
+            </li>
+            <li>
+              <a href="/activities/reports_coverage">Activity Summary Statistics</a>
+            </li>
+            <li className="active">
+            	<a href="/activities/reports_analysis">Sweat Rate Analysis </a>
+            </li>
+          </ul>
+        </div>
+      )
+    }
+  })
+
+
+var Filter = React.createClass({
+  getInitialState: function() {
+    return {
+      value: [1],
+      list: {
+        '1' : 'Swimming',
+        '2' : 'Cycling',
+        '3' : 'Running',
+        '4' : 'Others'
+      }
+    }
+  },
+
+  handleFilterChange: function(e) {
+    var csrf = $("[name='csrf-token']").attr('content');
+      var self = this;
+      var value = e.target.value;
+
+      // if($(e.target).is(":checked")){
+      //   if($.inArray( parseInt(value), this.state.value ) == -1) {
+      //     this.state.value.push(parseInt(value))
+      //   }
+      // } else {
+      //   if($.inArray( parseInt(value), this.state.value ) != -1) {
+      //     this.state.value.splice(this.state.value.indexOf(parseInt(value)), 1);
+      //   }
+      // }
+
+      $.ajax({
+        url: '/activities/reports_analysis',
+        type: 'GET',
+        headers:{"X-CSRF-Token": csrf },
+        dataType: 'json',
+        data: {
+          "activities": value,
+        }
+      }).done(function(response) {
+        var response_data = JSON.parse(response.reports_analysis)
+        self.props.updateFilter(response_data);
+      }).error(function(response) {
+
+      })
+  },
+
+  render() {
+    var div = [];
+    var s = this.props.sports;
+    $.each(s, function(a, b) {
+      var first = (a == 0) ? true : false;
+      div.push(<div className="filter-data">
+                  <input type="radio" value={b} data-type="activity" onClick={this.handleFilterChange} name="activity" defaultChecked={first}/> {this.state.list[b]}
+                </div>)
+    }.bind(this))
+
+
+    return (
+      <div className="analysis-filter">
+        {div}
+      </div>
+      )
+  }
+})
+
+var AnalysisChart = React.createClass({
+  getInitialState: function() {
+    return {
+    	units: units,
+    	data: reports_analysis,
+      chart_linear: '',
+      used_sports: used_sports
+    };
+  },
+
+  componentDidMount: function() {
+    this.createChart();
+  },
+
+  createChart: function () {
+    var unit_name = this.state.units[0]['name'],
+        x_axis_def = (unit_name == "Metric") ? [10, 30] : [50, 90];
+
+    var reports_analysis = this.state.data;
+
+    // Find X-Axis Max and Min
+    var high_data_x = $.map(reports_analysis.high,function (val, i){
+                      return val[0]
+                    }),
+
+        medium_data_x = $.map(reports_analysis.medium,function (val, i){
+                      return val[0]
+                    }),
+
+        low_data_x = $.map(reports_analysis.low,function (val, i){
+                      return val[0]
+                    });
+
+    var x_axis = $.merge( high_data_x, medium_data_x, low_data_x ),
+        x_min = Math.min.apply(Math, x_axis),
+        x_max = Math.max.apply(Math, x_axis);
+
+
+    // Find X-Axis Max and Min
+    var high_data_y = $.map(reports_analysis.high,function (val, i){
+                      return val[1]
+                    });
+
+    var medium_data_y = $.map(reports_analysis.medium,function (val, i){
+                      return val[1]
+                    });
+
+    var low_data_y = $.map(reports_analysis.low,function (val, i){
+                      return val[1]
+                    });
+
+    var y_axis = $.merge( high_data_y, medium_data_y, low_data_y ),
+        y_min = Math.min.apply(Math, y_axis),
+        y_max = Math.max.apply(Math, y_axis);
+
+    this.state.chart_linear = new Highcharts.Chart({
+          chart: {
+            renderTo: 'linearChart'
+          },
+          xAxis: {
+            min: (x_min < x_axis_def[0]) ? (x_min - 10) : x_axis_def[0],
+            max: (x_max > x_axis_def[1]) ? (x_max + 10) : x_axis_def[1],
+            tickInterval: 10,
+            title: {
+                enabled: true,
+                text: 'Temperature ( ' + this.state.units[0]['temp'] + ' )'
+            },
+         },
+          yAxis: {
+              min: (y_min < 0.5) ? 0 : (0.5),
+              max: (y_max > 2) ? (y_max + 0.5) : 2,
+              tickInterval: 0.5,
+              title: {
+                  enabled: true,
+                  text: 'Sweat Rate'
+              }
+         },
+         title: {
+              text: ''
+         },
+         tooltip:{
+                formatter:function(){
+                    return "<span> <b> " + this.series.name + " </b></span> <br/ > <span> Sweat Rate : " + this.y + "</span> <br /><span>Temp : " + this.x +" </span>"
+                }
+            },
+          series: [
+          {
+            name: "high",
+            type: 'scatter',
+            data: reports_analysis.high,
+            color: "rgb(241, 92, 128)",
+          },
+          {
+            name: "high",
+            type: 'line',
+            color: "rgb(241, 92, 128)",
+            marker: { enabled: false },
+            /* function returns data for trend-line */
+            data: (function() {
+              var res = $.each(fitData(reports_analysis.high).data,function (i,val){
+                val[1] = parseFloat(val[1].toFixed(2))
+              })
+
+              return res;
+            })()
+          },
+          {
+            name: "Medium",
+            type: 'scatter',
+            // color: 'rgb(124, 181, 236)',
+            color: "orange",
+            data: reports_analysis.medium
+          },
+          {
+            name: "Medium",
+            type: 'line',
+            // color: 'rgb(124, 181, 236)',
+            color: "orange",
+            marker: { enabled: false },
+            /* function returns data for trend-line */
+            data: (function() {
+              var res = $.each(fitData(reports_analysis.medium).data,function(i,val){
+                val[1] = parseFloat(val[1].toFixed(2))
+              })
+
+              return res;
+            })()
+          },{
+            name: "low",
+            type: 'scatter',
+            data: reports_analysis.low,
+            color: "green"
+          },
+          {
+            name: "low",
+            type: 'line',
+            color: "green",
+            marker: { enabled: false },
+            /* function returns data for trend-line */
+            data: (function() {
+        var res = $.each(fitData(reports_analysis.low).data,function(i, val){
+                val[1] = parseFloat(val[1].toFixed(2))
+              })
+
+              return res;
+            })()
+          }]
+      });
+  },
+
+  handleFilterUpdate: function(filterdata) {
+    this.setState({
+      data: filterdata
+    });
+
+    this.updateChartData(filterdata);
+  },
+
+  updateChartData: function (filterdata) {
+    var chart = this.state.chart_linear;
+    var unit_name = this.state.units[0]['name'],
+        x_axis_def = (unit_name == "Metric") ? [10, 30] : [50, 90];
+
+    var reports_analysis = filterdata;
+
+    // Find X-Axis Max and Min
+    var high_data_x = $.map(reports_analysis.high,function (val, i){
+                      return val[0]
+                    }),
+
+        medium_data_x = $.map(reports_analysis.medium,function (val, i){
+                      return val[0]
+                    }),
+
+        low_data_x = $.map(reports_analysis.low,function (val, i){
+                      return val[0]
+                    });
+
+    var x_axis = $.merge( high_data_x, medium_data_x, low_data_x ),
+        x_min = Math.min.apply(Math, x_axis),
+        x_max = Math.max.apply(Math, x_axis);
+
+
+    // Find X-Axis Max and Min
+    var high_data_y = $.map(reports_analysis.high,function (val, i){
+                      return val[1]
+                    });
+
+    var medium_data_y = $.map(reports_analysis.medium,function (val, i){
+                      return val[1]
+                    });
+
+    var low_data_y = $.map(reports_analysis.low,function (val, i){
+                      return val[1]
+                    });
+
+    var y_axis = $.merge( high_data_y, medium_data_y, low_data_y ),
+        y_min = Math.min.apply(Math, y_axis),
+        y_max = Math.max.apply(Math, y_axis);
+
+    chart.xAxis[0].update({
+      // min: x_min,
+      // max: x_max
+      min: (x_min < x_axis_def[0]) ? (x_min - 10) : x_axis_def[0],
+      max: (x_max > x_axis_def[1]) ? (x_max + 10) : x_axis_def[1]
+    });
+
+    chart.yAxis[0].update({
+      // min: y_min,
+      // max: y_max
+      min: (y_min < 0.5) ? 0 : (0.5),
+      max: (y_max > 2) ? (y_max + 0.5) : 2
+    });
+
+    chart.series[0].update({
+      data: reports_analysis.high
+    }, true);
+
+    chart.series[1].update({
+        data: (function() {
+              var res = $.each(fitData(reports_analysis.high).data,function (i,val){
+                val[1] = parseFloat(val[1].toFixed(2))
+              })
+
+              return res;
+            })()
+    }, true);
+
+    chart.series[2].update({
+        data: reports_analysis.medium
+    }, true);
+
+    chart.series[3].update({
+        data: (function() {
+              var res = $.each(fitData(reports_analysis.medium).data,function (i,val){
+                val[1] = parseFloat(val[1].toFixed(2))
+              })
+
+              return res;
+            })()
+    }, true);
+
+    chart.series[4].update({
+        data: reports_analysis.low
+    }, true);
+
+    chart.series[5].update({
+        data: (function() {
+              var res = $.each(fitData(reports_analysis.low).data,function (i,val){
+                val[1] = parseFloat(val[1].toFixed(2))
+              })
+
+              return res;
+            })()
+    }, true);
+  },
+
+  render: function() {
+    return (
+      <div className=" col-md-12 activity-chart" ref="activityChart">
+        <Filter updateFilter={this.handleFilterUpdate} table_range={this.state.table_range} createChart={this.createChart} chart_linear={this.state.chart_linear} unit_name={this.state.unit_name} sports={this.state.used_sports}/>
+      	<div id="linearChart" className="chart"></div>
+    	</div>
+    );
+  }
+});
+
+  var RightPanel = React.createClass({
+    render() {
+      return (
+        <div className="col-md-10 right-panel">
+        	<div className="col-md-12 activity-head">
+            <h2> <i className="fa fa-calculator"></i> Sweat Rate Analysis </h2>
+          </div>
+
+          <AnalysisChart />
+        </div>
+      )
+    }
+  })
+
+
+  var Reports = React.createClass({
+    getInitialState: function() {
+      return {
+
+      }
+    },
+    render() {
+      return (
+        <div>
+          <div className="col-md-12 row reports-wrapper">
+            <LeftPanel />
+            <RightPanel />
+          </div>
+        </div>
+      )
+    }
+  })
+
+  ReactDOM.render(
+     <Reports />,
+      document.getElementById('app-container')
+  );
+
+
+</script>

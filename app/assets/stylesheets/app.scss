@@ -1,0 +1,131 @@
+* {
+box-sizing: border-box;
+}
+
+*:focus {
+	outline: none;
+}
+
+body {
+  background-color: #eaeaea;
+  padding: 50px;
+  overflow: auto;
+      margin: 0;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 13px;
+    line-height: 16px;
+    color: #333;
+}
+
+.user-edit-container {
+  width: 400px;
+}
+
+.login, .forget-password, .signup {
+  margin: 20px auto;
+  width: 400px;
+  form {
+      margin: 25px 15px 15px;
+  }
+}
+
+.login-screen, .forget-password-screen, .signup-screen {
+  background-color: #FFF;
+  padding: 20px;
+  border-radius: 5px;
+  border: 1px solid #000;
+}
+
+.app-title {
+text-align: center;
+color: #777;
+  h2 {
+    font-size: 20px;
+    font-weight: 500;
+    color: #424242;
+  }
+}
+
+.actions {
+  text-align: center;
+}
+.control-group {
+margin-bottom: 10px;
+}
+
+input:focus {
+border: 2px solid #3498DB;
+box-shadow: none;
+}
+
+.form-group {
+  margin: 15px 0;
+}
+.form-group label {
+    margin-bottom: 5px;
+}
+
+#error_explanation {
+  margin: 20px 0;
+  padding: 10px;
+  color: #a94442;
+  background-color: #f2dede;
+  border-color: #ebccd1;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  
+  ul {
+    list-style: inherit;
+    padding: 10px 0 0 15px;
+    line-height: 1.2;
+  }
+}
+
+.redirect-action.first{
+ border-bottom: 1px dashed #aaa;
+}
+
+.redirect-action {
+  text-align: center;
+  padding: 15px 0;
+  font-size: 13px;
+  color: #bbb;
+  a {
+    color: #707070;
+    font-weight: 500;
+  }
+}
+
+.password-group {
+    font-size: 16px;
+    padding: 0 14px;
+}
+
+/*flash*/
+.alert-error {
+    background-color: #f2dede;
+    border-color: #eed3d7;
+    color: #b94a48;
+    text-align: left;
+ }
+
+.alert-alert {
+    background-color: #f2dede;
+    border-color: #eed3d7;
+    color: #b94a48;
+    text-align: left;
+ }
+
+.alert-success {
+    background-color: #dff0d8;
+    border-color: #d6e9c6;
+    color: #468847;
+    text-align: left;
+ }
+
+.alert-notice {
+    background-color: #dff0d8;
+    border-color: #d6e9c6;
+    color: #468847;
+    text-align: left;
+ }

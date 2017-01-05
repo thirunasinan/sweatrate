@@ -1,0 +1,189 @@
+<script type="text/javascript">
+	var activity = <%= @activities.html_safe %>
+	var sports = <%= @sports.html_safe %>
+  var units = <%= @units.html_safe %>
+</script>
+
+
+<script type="text/babel">
+
+  var CustomRow = React.createClass({
+  		getSportsText: function (activity_id) {
+  			var text =""
+  			this.props.sports.forEach(function(data){
+  				if(activity_id == data.id) {
+  					text = data.name;
+  					return
+  				}
+  			})
+
+  			return text;
+  		},
+      getTimeZone: function (time) {
+        if(time != "" && time != undefined) {
+          var t = time.split('T')
+            t = t[1].split('.')
+
+          return t[0];
+        }
+
+        return time;
+      },
+      // getSpeed:  function () {
+      //   var data = this.props.cell_data;
+      //   if (data.activity == 1 || data.activity == 3) {
+      //     return this.calc_min_mile(data.pace);
+      //   } else {
+      //     return this.calc_miles(data.speed);
+      //   }
+      // },
+      calc_fahrenheit: function(temp) {
+        if (temp) {
+          return (this.props.units.name != "Metric") ? (temp*9/5 + 32).toFixed(2) : temp.toFixed(2)
+        }
+      },
+      calc_miles: function(dist){
+        if (dist) {
+          return (this.props.units.name != "Metric") ? (dist * 0.621371).toFixed(2) : dist.toFixed(2);
+        }
+      },
+      calc_min_mile: function (pace) {
+        if (pace) {
+          return (this.props.units.name != "Metric") ? (pace * 1.60934).toFixed(2) : pace.toFixed(2);
+        }
+      },
+      calc_pounds: function(w){
+        if (w) {
+          return (this.props.units.name != "Metric") ? (w * 2.20462).toFixed(2) : w.toFixed(2);
+        }
+      },
+      calc_gallon: function(v){
+        if (v) {
+          return (this.props.units.name != "Metric") ? (v * 33.814).toFixed(2) : v.toFixed(2);
+        }
+      },
+      calc_pace: function (activity,p) {
+        if(p == undefined || p == "") p = 0;
+        
+        if (activity == 3) {
+          return (this.props.units.name != "Metric") ? (p * 1.60934).toFixed(2) : p.toFixed(2);
+        } else {
+          return (this.props.units.name != "Metric") ? (p * 0.9144).toFixed(2) : p.toFixed(2);
+        }
+      },
+      pace_convertion: function (activity, pace) {
+        pace = this.calc_pace(activity, pace);
+
+        var pace_con = (pace != undefined) ? this.secondsToHms(Math.round(pace * 60)) : "";
+        return pace_con;
+      },
+      secondsToHms: function(d) {
+        d = Number(d);
+        var h = Math.floor(d / 3600);
+        var m = Math.floor(d % 3600 / 60);
+        var s = Math.floor(d % 3600 % 60);
+        return ((h > 0 ? h + ":" + (m < 10 ? "0" : "") : "") + m + ":" + (s < 10 ? "0" : "") + s); 
+      },
+      render: function() {
+          return (
+              <tr>
+                <td >{this.props.cell_data.date}</td>
+                <td >{this.getTimeZone(this.props.cell_data.time)}</td>
+                <td >{this.getSportsText(this.props.cell_data.activity)}</td>
+                <td >{this.calc_miles(this.props.cell_data.distance)}</td>
+                <td >{this.calc_miles(this.props.cell_data.speed) }</td>
+                <td >{this.pace_convertion(this.props.cell_data.activity, this.props.cell_data.pace)}</td>
+                <td >{this.getTimeZone(this.props.cell_data.duration)}</td>
+                <td >{this.props.cell_data.effort}</td>
+                <td >{this.calc_fahrenheit(this.props.cell_data.temp_feels_like)}</td>
+                <td >{this.calc_pounds(this.props.cell_data.weight_before)}</td>
+                <td >{this.calc_pounds(this.props.cell_data.weight_after)}</td>
+                <td >{this.calc_gallon(this.props.cell_data.hydration)}</td>
+                <td >{this.props.cell_data.sweat_rate}</td>
+                <td >{this.props.cell_data.description}</td>
+                <td >{this.props.cell_data.notes}</td>
+                <td className="headcol">
+                	<a href={"/activities/" + this.props.cell_data.id+ "/edit"}>
+                		<i className="fa fa-edit"></i>
+                	</a>
+                </td>
+              </tr>
+          );
+      }
+  });
+
+
+  var Table = React.createClass({
+    getInitialState() {
+      return{
+        table_data: activity,
+        sports: sports,
+        units: units[0],
+      }
+    },
+    componentDidMount: function () {
+      $('.table').DataTable( {
+          searching:      false,
+          ordering  : false,
+          info: false,
+          // scrollY:        "300px",
+          scrollX:        true,
+          scrollCollapse: true,
+          paging:         false,
+          fixedColumns:   {
+              rightColumns: 1
+          }
+      });
+    },
+    render: function() {
+
+      var rows = [];
+
+      this.state.table_data.forEach(function(value) {
+          rows.push(<CustomRow units={this.state.units} cell_data={value} key={value.id} sports={this.state.sports}/>);
+      }.bind(this));
+
+      return (
+      	<div className="container">
+          <div className="col-md-12 activity-head">
+            <h2> <i className="fa fa-list-alt"></i> Activities </h2>
+          </div>
+          <div className="col-md-12 table-wrapper">
+	        <table className="table table-bordered table-striped table-hover activity-table order-column">
+	          <thead>
+	            <tr>
+	                <th ><div>Date </div> <div className="unit">{'(yyyy-mm-dd)'} </div></th>
+	                <th ><div>Time</div> <div className="unit">{'(hh:mm:ss)'} </div></th>
+	                <th ><div>Sport</div> <div className="unit">  &nbsp;. </div></th>
+	                <th ><div>Distance</div> <div className="unit">{'( ' + this.state.units.distance + ' )'}</div></th>
+                  <th ><div>Speed</div>
+                      <div className="unit">{'( ' + this.state.units.speed + ')'}</div>
+                  </th>
+                  <th><div> Pace </div> 
+                    <div className="unit">{'( ' + this.state.units.pace + ' / ' + this.state.units.swimming_pace + ')'}</div> 
+                  </th>
+                  <th><div>Duration</div><div className="unit">{'(hh:mm:ss)'}</div></th>
+	                <th ><div>Effort</div> <div className="unit">&nbsp;.</div></th>
+	                <th ><div>Temp feels like </div><div className="unit">{'( ' + this.state.units.temp_feels_like + ' )'}</div></th>
+                  <th><div> Weight Before</div><div className="unit">{'( ' + this.state.units.weight + ' )'}</div></th>
+                  <th><div> Weight After</div><div className="unit">{'( ' + this.state.units.weight + ' )'}</div></th>
+                  <th><div> Hydration </div> <div className="unit">{'( ' + this.state.units.hydration + ' )'}</div></th>
+	                <th ><div>Sweat Rate </div><div className="unit">{'( ' + this.state.units.sweat_rate + ' )'}</div></th>
+                  <th ><div> Description</div></th>
+                  <th ><div>Notes </div></th>
+	                <th className="headcol" ></th>
+	            </tr>
+	          </thead>
+	          <tbody>
+	            {rows}
+	          </tbody>
+	        </table>
+          </div>
+	      </div>
+      )
+    }
+  })
+
+ReactDOM.render(<Table />, document.getElementById('app-container'));
+
+</script>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SweatRateTM</title>
+    <%= csrf_meta_tags %>
+
+    <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload' %>
+    <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>
+  </head>
+
+  <body>
+    <div class="text-center">
+    <a href="http://fuelthecure.net" title="FUEL the CURE">
+        <img src="/images/logo_home.png" alt="Sweatrate">
+    </a>
+    </div>
+    <div class="container">
+      <div class="login">
+        <% flash.each do |key, value| %>
+          <div class="alert alert-<%= key %>">
+            <%= value %>
+          </div>
+        <% end %>
+        
+        <%= yield %>
+      </div>
+    </div>
+
+  </body>
+</html>

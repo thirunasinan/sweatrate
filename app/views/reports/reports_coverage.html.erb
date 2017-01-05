@@ -1,0 +1,451 @@
+<script type="text/javascript" >
+  var reports_coverage = <%= @reports_coverage.html_safe %>
+  var unit_name = "<%= @unit_name %>"
+</script>
+<script type="text/babel">
+  var LeftPanel = React.createClass({
+    render() {
+      return (
+        <div className="col-md-2 left-panel">
+          <ul className="report-list">
+            <li> <a href="/activities/reports_table">Activity Data Table</a></li>
+            <li className="active">
+             <a href="/activities/reports_coverage">Activity Summary Statistics</a>
+            </li>
+            <li> <a href="/activities/reports_analysis">Sweat Rate Analysis </a></li>
+          </ul>
+        </div>
+      )
+    }
+  })
+
+  /* ========= Table ============ */
+  var CustomRow = React.createClass({
+
+      render: function() {
+          var td = [];
+          var s = this.props.data;
+          for(var obj in s){
+            td.push(<td className={obj } key={obj} >
+                      <div className="cell-single-data"><span className="count-data">{s[obj]['max']}</span> <span className="symbols">max</span></div>
+                      <div className="cell-single-data"><span className="count-data">{s[obj]['count']}</span><span className="symbols">#</span></div>
+                      <div className="cell-single-data"><span className="count-data">{s[obj]['avg']}</span> <span className="symbols">avg</span></div>
+                      <div className="cell-single-data"><span className="count-data">{s[obj]['stddev']}</span><span className="symbols">σ</span></div>
+                      <div className="cell-single-data"><span className="count-data">{s[obj]['min']}</span> <span className="symbols">min</span></div>
+                      <div className="cell-single-data"><span className="count-data">{s[obj]['range']}</span><span className="symbols">[..]</span></div>
+                    </td>)
+          }
+          return (
+              <tr id={this.props.name}>
+                <th scope="row"> {this.props.name}</th>
+                {td}
+              </tr>
+          );
+      }
+  });
+
+/*
+var table_data = [{
+          "low": {
+            "30-40": {
+            "min": 0,
+            "max": 0,
+            "avg": 0,
+            "range": 0,
+            "count": 0,
+            "stddev": 0
+            },
+            "40-50": {
+            "min": 4,
+            "max": 4,
+            "avg": 4,
+            "range": 0,
+            "count": 1,
+            "stddev": 0
+            },
+            "50-60": {
+            "min": 0,
+            "max": 0,
+            "avg": 0,
+            "range": 0,
+            "count": 0,
+            "stddev": 0
+            },
+            "60-70": {
+            "min": 0,
+            "max": 0,
+            "avg": 0,
+            "range": 0,
+            "count": 0,
+            "stddev": 0
+            },
+            "70-80": {
+            "min": 0,
+            "max": 0,
+            "avg": 0,
+            "range": 0,
+            "count": 0,
+            "stddev": 0
+            },
+            "80-90": {
+            "min": 0,
+            "max": 0,
+            "avg": 0,
+            "range": 0,
+            "count": 0,
+            "stddev": 0
+            },
+            "90-100": {
+            "min": 0,
+            "max": 0,
+            "avg": 0,
+            "range": 0,
+            "count": 0,
+            "stddev": 0
+            }
+          },
+          "medium": {
+            "30-40": {
+            "min": 0,
+            "max": 0,
+            "avg": 0,
+            "range": 0,
+            "count": 0,
+            "stddev": 0
+            },
+            "40-50": {
+            "min": 0,
+            "max": 0,
+            "avg": 0,
+            "range": 0,
+            "count": 0,
+            "stddev": 0
+            },
+            "50-60": {
+            "min": 0,
+            "max": 0,
+            "avg": 0,
+            "range": 0,
+            "count": 0,
+            "stddev": 0
+            },
+            "60-70": {
+            "min": 0,
+            "max": 0,
+            "avg": 0,
+            "range": 0,
+            "count": 0,
+            "stddev": 0
+            },
+            "70-80": {
+            "min": 8,
+            "max": 8,
+            "avg": 8,
+            "range": 0,
+            "count": 1,
+            "stddev": 0
+            },
+            "80-90": {
+            "min": 0,
+            "max": 0,
+            "avg": 0,
+            "range": 0,
+            "count": 0,
+            "stddev": 0
+            },
+            "90-100": {
+            "min": 1,
+            "max": 4,
+            "avg": 2,
+            "range": 3,
+            "count": 2,
+            "stddev": 2
+            }
+          },
+          "high": {
+            "30-40": {
+            "min": 0,
+            "max": 0,
+            "avg": 0,
+            "range": 0,
+            "count": 0,
+            "stddev": 0
+            },
+            "40-50": {
+            "min": 0,
+            "max": 0,
+            "avg": 0,
+            "range": 0,
+            "count": 0,
+            "stddev": 0
+            },
+            "50-60": {
+            "min": 0,
+            "max": 0,
+            "avg": 0,
+            "range": 0,
+            "count": 0,
+            "stddev": 0
+            },
+            "60-70": {
+            "min": 0,
+            "max": 0,
+            "avg": 0,
+            "range": 0,
+            "count": 0,
+            "stddev": 0
+            },
+            "70-80": {
+            "min": 0,
+            "max": 0,
+            "avg": 0,
+            "range": 0,
+            "count": 0,
+            "stddev": 0
+            },
+            "80-90": {
+            "min": 0,
+            "max": 0,
+            "avg": 0,
+            "range": 0,
+            "count": 0,
+            "stddev": 0
+            },
+            "90-100": {
+            "min": 0,
+            "max": 0,
+            "avg": 0,
+            "range": 0,
+            "count": 0,
+            "stddev": 0
+            }
+          }
+          }]*/
+
+  var range = {
+    Metric: {
+      "0_10": "0 - 10",
+      "10_20": "10 - 20",
+      "20_30": "20 - 30",
+      "30_40": "30 - 40",
+      "40_50": "40 - 50",
+      "50_60": "50 - 60"
+    },
+    Impreial: {
+      "40_50": "40 - 50",
+      "50_60": "50 - 60",
+      "60_70": "60 - 70",
+      "70_80": "70 - 80",
+      "80_90": "80 - 90",
+      "90_100": "90 - 100"
+    }
+  }
+
+  var Table = React.createClass({    
+    render: function() {
+      
+      var rows = [];
+      this.props.table_data.forEach(function(value) {
+        rows.push(<CustomRow name="High" data={value.high} ref="high" key="high"/>);
+        rows.push(<CustomRow name="Medium" data={value.medium} ref="medium" key="medium"/>);
+        rows.push(<CustomRow name="Low" data={value.low} ref="low" key="low"/>);
+      });
+
+      var head = [];
+      var unit = this.props.unit_name;
+
+      Object.keys(this.props.table_range[unit]).forEach(function(key) {
+        var value = this.props.table_range[unit][key]
+
+        head.push(<th scope="col" className={value.replace(/\s/gi, "")}> {value}</th>)
+      }.bind(this));
+
+      return (
+        <table className="table table-bordered report-table report-data-table table-content table-condensed">
+          <thead>
+            <tr>
+              <th></th>
+              { head }
+            </tr>
+          </thead>
+          <tbody>
+            {rows}
+          </tbody>
+        </table>
+      )
+    }
+  })
+
+  var Filter = React.createClass({
+    getInitialState: function() {
+      return {
+        value: [1,2,3,4]
+      }
+    },
+
+    handleChangeChk: function (e) {
+      var type = $(e.target).data('type');
+      var value = e.target.value;
+
+      if(type == "activity") {
+
+      } else if(type == "effort"){
+        if($(e.target).is(":checked")){
+          $('#'+value).show();
+        } else {
+          $('#'+value).hide();
+        }
+      } else {
+        if($(e.target).is(":checked")){
+          $('.'+value).show();
+        } else {
+          $('.'+value).hide();
+        }
+      }
+    },
+
+    handleFilterChange: function(e) {
+      var csrf = $("[name='csrf-token']").attr('content');
+      var self = this;
+      var value = e.target.value;
+
+      if($(e.target).is(":checked")){
+        if($.inArray( parseInt(value), this.state.value ) == -1) {
+          this.state.value.push(parseInt(value))
+        }
+      } else {
+        if($.inArray( parseInt(value), this.state.value ) != -1) {
+          this.state.value.splice(this.state.value.indexOf(parseInt(value)), 1);
+        }
+      }
+
+      $.ajax({
+        url: '/activities/reports_coverage',
+        type: 'GET',
+        headers:{"X-CSRF-Token": csrf },
+        dataType: 'json',
+        data: {
+          "activities": this.state.value,
+        }
+      }).done(function(response) {
+        self.props.updateFilter(response.reports_coverage);
+      }).error(function(response) {
+
+      })
+    },
+
+    render() {
+
+      var head = [];
+      var unit = this.props.unit_name;
+
+      Object.keys(this.props.table_range[unit]).forEach(function(key) {
+        var value = this.props.table_range[unit][key]
+
+        head.push(
+          <div className="filter-data">
+            <input type="checkbox" value={value.replace(/\s/gi, "")} defaultChecked="true" onChange={this.handleChangeChk}/>
+            {" " +value}
+          </div>)
+      }.bind(this));
+
+      return (
+        <div className="col-md-12 report-filter">
+          <div className="col-md-3">
+            <div className="filter-head">
+              Activity Type
+            </div>
+            <div>
+              <div className="filter-data"><input type="checkbox" value="1" defaultChecked="true" data-type="activity" onClick={this.handleFilterChange}/> Swimming</div>
+              <div className="filter-data"><input type="checkbox" value="2" defaultChecked="true" data-type="activity" onClick={this.handleFilterChange}/> Cycling</div>
+              <div className="filter-data"><input type="checkbox" value="3" defaultChecked="true" data-type="activity" onClick={this.handleFilterChange}/> Running</div>
+              <div className="filter-data"><input type="checkbox" value="4" defaultChecked="true" data-type="activity" onClick={this.handleFilterChange}/> Other</div>
+            </div>
+          </div>
+          <div className="col-md-3">
+            <div className="filter-head">
+              Effort / Intensity 
+            </div>
+            <div>
+              <div className="filter-data"><input type="checkbox" value="High" defaultChecked="true" data-type="effort" onChange={this.handleChangeChk}/> High</div>
+              <div className="filter-data"><input type="checkbox" value="Low" defaultChecked="true" data-type="effort" onChange={this.handleChangeChk}/> Low</div>
+              <div className="filter-data"><input type="checkbox" value="Medium" defaultChecked="true" data-type="effort" onChange={this.handleChangeChk}/> Medium</div>
+            </div>
+          </div>
+          <div className="col-md-6">
+            <div className="filter-head">
+              Temperature Range
+            </div>
+            <div>
+              { head }
+            </div>
+          </div>
+        </div>
+      )
+    }
+  })
+
+  var ActivityDataTable = React.createClass({
+    getInitialState: function() {
+      return {
+        table_data: reports_coverage,
+        table_range: range,
+        unit_name: unit_name
+      }
+    },
+
+    handleFilterUpdate: function(filterdata) {
+      this.setState({
+        table_data: filterdata
+      });
+    },
+
+    render() {
+      return (
+        <div>
+          <div className="col-md-12 activity-head">
+            <h2> <i className="fa fa-calculator"></i> Activity Summary Statistics </h2>
+          </div>
+          <div className="">
+            <Filter updateFilter={this.handleFilterUpdate} table_range={this.state.table_range} unit_name={this.state.unit_name}/>
+            <Table table_data={this.state.table_data} table_range={this.state.table_range} unit_name={this.state.unit_name}/>
+          </div>
+        </div>
+      )
+    }
+  })
+
+  var RightPanel = React.createClass({
+    render() {
+      return (
+        <div className="col-md-10 right-panel">
+          <ActivityDataTable />
+        </div>
+      )
+    }
+  })
+
+  var Reports = React.createClass({
+    getInitialState: function() {
+      return {
+        
+      }
+    },
+    render() {
+      return (
+        <div>
+          <div className="col-md-12 row reports-wrapper">
+            <LeftPanel />
+            <RightPanel />
+          </div>
+        </div>
+      )
+    }
+  })
+
+  ReactDOM.render(
+     <Reports />,
+      document.getElementById('app-container')
+  );
+
+</script>

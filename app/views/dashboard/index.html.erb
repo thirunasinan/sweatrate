@@ -1,0 +1,343 @@
+<script type="text/javascript">
+  var widgets = <%= @widgets.html_safe %>
+  var sports_list = <%= @sports.html_safe %>
+  var unit_name = "<%= @unit_name.html_safe %>"
+</script>
+
+<script type="text/babel">
+	var WidgetPickList = React.createClass({
+		itemClick(e) {
+			$(e.currentTarget).parent().toggleClass('checked');
+		},
+
+	  render() {
+	    var ele = function (item, index) {
+	      var imgurl = '/images/' + item.name + '.png';
+
+      	var existing = this.props.existingSportsList
+
+      		item['checked'] = false;
+
+      		$.each(existing, function(i, obj) {
+      			if(item['id'] == obj['id']) {
+      				item['checked'] = 'checked';
+      				return false
+      			}
+      		})
+
+		return (
+	        <div key={item.id} className={"col-md-2 col-md-offset-1 sports-item squaredOne " + item.checked} >
+	          <input type="checkbox" id={ "sport" + item.id} className="" name={item.name} value={item.id} defaultChecked={item.checked} onClick={this.itemClick}/>
+	          <label htmlFor={ "sport" + item.id}> {item.name} </label>
+				<img src={imgurl} alt={item.name} />
+	        </div>
+	    )}.bind(this)
+
+	    return <div className="col-md-11 text-center"> {this.props.sportsList.map(ele)} </div>
+	  }
+	})
+
+	var Modal = React.createClass({
+	    componentDidMount(){
+	        var modalElement = ReactDOM.findDOMNode(this.refs.modal);
+	        $(modalElement).modal('show');
+	        $(modalElement).on('hidden.bs.modal', this.props.handleHideModal);
+	    },
+      handleClick(e) {
+      	var picked_widget = [];
+      	$(".sports-item input:checked").each(function() {
+      		picked_widget.push(parseInt( $(this).val() ));
+      	})
+
+				var csrf = $("[name='csrf-token']").attr('content');
+
+				$.ajax({
+					url: '/dashboard/add_widget',
+					type: 'POST',
+					headers:{"X-CSRF-Token": csrf },
+					data: {
+						"widgets": picked_widget,
+					}
+				}).done(function(response) {
+						location.reload();
+				}).error(function(response) {
+
+				})
+      },
+	    render(){
+	      return (
+	          <div className="modal fade" ref="modal">
+	            <div className="modal-dialog">
+	              <div className="modal-content">
+	                <div className="modal-header">
+	                  <button type="button" className="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+	                  <h4 className="modal-title">Pick Sports</h4>
+	                </div>
+	                <div className="modal-body row">
+
+	                  <WidgetPickList sportsList={this.props.sportsList} existingSportsList={this.props.existingSportsList}/>
+
+	                </div>
+	                <div className="modal-footer">
+	                  <button type="button" className="btn btn-default" data-dismiss="modal">Cancel</button>
+	                  <button type="button" className="btn btn-primary" onClick={this.handleClick}>Save</button>
+	                </div>
+	              </div>
+	            </div>
+	          </div>
+	        )
+	    },
+	    propTypes:{
+	      handleHideModal: React.PropTypes.func.isRequired
+	    }
+	});
+
+
+
+	var ProgressChart = React.createClass({
+	  componentDidMount: function() {
+	    var chart_re = 'chart' + this.props.chart_ref
+	    var el = ReactDOM.findDOMNode(this.refs[chart_re]);
+			var  progress = 0;
+			var twoPi =  2 * Math.PI;
+
+			var chart_data = (this.props.data == null) ? 0 : this.props.data;
+
+		  var svg = d3.select(el)
+		              .append("svg")
+		              .attr("width", this.props.width)
+		              .attr("height", this.props.height)
+		              .append("g")
+		              .attr("transform", "translate(" + this.props.width / 2 + "," +  this.props.height / 2 + ")");
+
+		  var arc = d3.arc()
+		              .startAngle(0)
+		              .innerRadius(this.props.width / 2)
+		              .outerRadius(this.props.width / 3);
+
+		  var meter = svg.append("g")
+		                .attr("class", "progress-meter");
+
+		              meter.append("path")
+		                .attr("class", "background")
+		                .attr("d", arc.endAngle(twoPi));
+
+		              meter.append("text")
+		                .attr("text-anchor", "middle")
+		                .attr("dy", "0.5em")
+		                .text(chart_data + "%")
+
+		  var foreground = meter.append("path")
+		                      .attr("class", "foreground");
+
+	    svg.transition().tween("progress", function() {
+	    	var i = d3.interpolate(progress, chart_data / 100);
+	        return function(t) {
+	            progress = i(t);
+	            foreground.attr("d", arc.endAngle(twoPi * progress));
+	            meter.transition().delay(500)
+	        };
+	    });
+
+	  },
+
+	  render: function() {
+	    var chart_ref = 'chart' + this.props.chart_ref;
+	    return (
+	      <div className={'progressChart ' + chart_ref} ref={chart_ref}></div>
+	    );
+	  }
+	});
+
+
+  var CustomRow = React.createClass({
+      getColor: function(record) {
+        var color;
+        if(record == 0) {
+          color = "grey"
+        } else if (record == 1) {
+          color = "red"
+        } else if (record > 1 && record <= 5) {
+          color = "yellow"
+        } else {
+          color = "green"
+        }
+
+        return color;
+      },
+      showCount: function(record) {
+        return (record > 0) ? record : '';
+      },
+      render: function() {
+          return (
+              <tr>
+                <th scope="row"> {this.props.name}</th>
+                <td className={this.getColor(this.props.less_fifty)}> {this.showCount(this.props.less_fifty)}</td>
+                <td className={this.getColor(this.props.seventy)}> {this.showCount(this.props.seventy)}</td>
+                <td className={this.getColor(this.props.ninty)}> {this.showCount(this.props.ninty)}</td>
+                <td className={this.getColor(this.props.greater_ninty)}> {this.showCount(this.props.greater_ninty)}</td>
+              </tr>
+          );
+      }
+  });
+
+  var TableHeaderRow = React.createClass({
+  	render: function() {
+  		return (
+  			<tr>
+				<th></th>
+	  			<th scope="col">{this.props.first}</th>
+	            <th scope="col">{this.props.second}</th>
+	            <th scope="col">{this.props.third}</th>
+	            <th scope="col">{this.props.fourth}</th>
+	        </tr>
+  		)
+  	}
+  })
+
+  var Table = React.createClass({
+    getInitialState() {
+      return{
+        table_data: [
+          {name: "High", less_than_fifty : 0, less_than_seventy: 0, less_than_ninety: 0, greater_than_ninety: 0},
+          {name: "Medium", less_than_fifty : 0, less_than_seventy: 0, less_than_ninety: 0, greater_than_ninety: 0},
+          {name: "Low", less_than_fifty : 0, less_than_seventy: 0, less_than_ninety: 0, greater_than_ninety: 0}
+        ]
+      }
+    },
+
+    render: function() {
+
+      var rows = [];
+      // var data = $.extend([],this.state.table_data,this.props.table_data);
+      var data = this.props.table_data;
+
+      data.forEach(function(value) {
+          rows.push(<CustomRow name={value.name} less_fifty={value.less_than_fifty} seventy={value.less_than_seventy} ninty={value.less_than_ninety} greater_ninty={value.greater_than_ninety} key={value.name}/>);
+      });
+
+      return (
+        <table className="table table-bordered">
+          <thead>
+          	{
+          	(this.props.unit_name == "Metric") ?
+  			<TableHeaderRow first="< 10" second="10 - 20" third="20 - 30" fourth=" > 30"/>
+  			:
+  			<TableHeaderRow first="< 50 " second="50 - 70" third="70 - 90" fourth=" > 90"/>
+          	}
+
+          </thead>
+          <tbody>
+            {rows}
+          </tbody>
+        </table>
+      )
+    }
+  })
+
+	var MySports = React.createClass({
+	  render() {
+	    var list = function (item) {
+		    var imgSrc = '/images/' + item.name + '.png';
+		    var href = "/activities/" + item.name.toLowerCase();
+
+	      return (
+	        <div key={item.id} className="col-md-4">
+	          <a className="sports-widget" href={ href }>
+	            <div className="report-content">
+	              <img src={imgSrc} alt={item.name}/>
+	              <ProgressChart chart_ref={item.id} width="60" height="60"
+	              data={this.props.mySportsList.activity_split[item.name]}/>
+	            </div>
+	            <div className="table-content">
+                <Table unit_name = {this.props.unitName} table_data={this.props.mySportsList.table_data[item.name]}/>
+	            </div>
+	          </a>
+	        </div>
+	      )
+	    }.bind(this)
+
+	    return (
+	    	<div>
+	    		<div className="col-md-12">
+	    			{this.props.mySportsList.list_data.map(list)}
+	    		</div>
+	    		<div className="col-md-12">
+	    			<div className="col-md-4"></div>
+		    		<div className="col-md-4 legend">
+		    			<h5> Legend (Number of Activities) </h5>
+						<ul>
+							<li><div className="grey"></div><span> 0 </span></li>
+							<li><div className="red"></div> 1 </li>
+							<li><div className="yellow"> </div>2 - 5</li>
+							<li><div className="green"></div> > 5</li>
+						</ul>
+					</div>
+					<div className="col-md-4"></div>
+				</div>
+			</div>
+	    )
+	  }
+	})
+
+	var Dashboard = React.createClass({
+	    getInitialState(){
+
+	    	var data = {}
+			$.each(widgets.table_data,function(a, obj){
+				data[a] = 0
+				$.each(obj,function(i, val){
+					$.each(val,function(key, value){
+						if(value > 0) { data[a] += 1}
+					})
+				})
+				data[a] = ((data[a] / 12) * 100 ).toFixed();
+			})
+
+			widgets["activity_split"] = data;
+	        return {
+	          view: {showModal: false},
+	          sportsList: sports_list,
+	          mySportsList: widgets,
+	          unitName: unit_name
+	        }
+	    },
+	    handleHideModal(){
+	      this.setState({view: {showModal: false}})
+	    },
+	    handleShowModal(){
+	      this.setState({view: {showModal: true}})
+	    },
+	    render(){
+	      return(
+	        <div>
+	          <div className="col-md-12 add-widget text-right">
+	          	<h2 className="title pull-left">
+	          		<i className="fa fa-th"></i>   Dashboard
+	          	</h2>
+	            <a className="btn btn-default first" onClick={this.handleShowModal}>
+	              <i className="fa fa-th-large"></i> Pick Sports
+	            </a>
+	            <a className="btn btn-default" href="/activities/new">
+	              <i className="fa fa-plus-circle"></i> New Activity
+	            </a>
+	          </div>
+	          {this.state.view.showModal ?
+	          <Modal handleHideModal={this.handleHideModal} sportsList={this.state.sportsList} existingSportsList={this.state.mySportsList.list_data}/> : null}
+	          <div className="selected-widget">
+
+	            <MySports unitName={this.state.unitName} mySportsList={this.state.mySportsList} />
+
+	          </div>
+
+	        </div>
+	      );
+	    }
+	});
+
+	ReactDOM.render(
+	   <Dashboard />,
+	    document.getElementById('app-container')
+	);
+
+</script>

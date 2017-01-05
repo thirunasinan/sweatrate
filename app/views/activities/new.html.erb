@@ -1,0 +1,659 @@
+<script type="text/javascript">
+  var units = <%= @units.html_safe %>
+  var sports = <%= @sports.html_safe %>
+
+  var widgets = <%= @widgets %>
+
+  var activity = <%= @activities.to_json.html_safe %>
+</script>
+
+<script type="text/babel">
+var Input = React.createClass({
+  render() {
+
+    var input;
+    if(this.props.unit == undefined) {
+      input = (
+          <input
+            type={this.props.type}
+            name={this.props.name}
+            id={this.props.name}
+            value={this.props.value}
+            onChange={this.props.updateStateProp}
+            className={"form-control " + this.props.required}
+            />
+      )
+    } else if (this.props.unit == "calendar") {
+      input= (
+          <div className={"input-group " + this.props.unit + "picker date-field"}>
+            <input type="text" name="mm" className="form-control dd-mm date_field" placeholder="MM" value={this.props.field_value.mm} onChange={this.props.onUpdateFieldValue}
+            />
+            <span className="pull-left seperator">/</span>
+            <input type="text" name="dd" className="form-control dd-mm date_field" placeholder="DD" value={this.props.field_value.dd} onChange={this.props.onUpdateFieldValue}
+            />
+            <span className="pull-left seperator" >/</span>
+            <input type="text" name="yy" className="form-control yyyy date_field" placeholder="YYYY" value={this.props.field_value.yy} onChange={this.props.onUpdateFieldValue}
+            />
+
+            <input
+                type="hidden"
+                name={this.props.name}
+                id={this.props.name}
+                value={this.props.value}
+                className="form-control"
+                />
+          </div>
+      )
+    } else if (this.props.klass == "time_field") {
+      input= (
+          <div className={"input-group " + this.props.unit + "picker time-field"}>
+            <input type="text" name="hh" className={"form-control hms " + this.props.klass} placeholder="HH" onChange={this.props.onUpdateFieldValue} value={this.props.field_value.hh}/>
+            <span className="pull-left seperator">:</span>
+            <input type="text" name="mm" className={"form-control hms " + this.props.klass} placeholder="MM" onChange={this.props.onUpdateFieldValue} value={this.props.field_value.mm}/>
+            <span className="pull-left seperator">:</span>
+            <input type="text" name="ss" className={"form-control hms " + this.props.klass} placeholder="SS" onChange={this.props.onUpdateFieldValue} value={this.props.field_value.ss}/>
+
+            <select name="period" className={"form-control hms period " + this.props.klass} onChange={this.props.onUpdateFieldValue} value={this.props.field_value.period}>
+                <option value="am"> AM </option>
+                <option value="pm"> PM </option>
+            </select>
+
+            <input
+                type="hidden"
+                name={this.props.name}
+                id={this.props.name}
+                value={this.props.value}
+                className="form-control"
+                />
+          </div>
+      )
+    } else if (this.props.klass == "duration_field") {
+      input= (
+          <div className={"input-group " + this.props.unit + "picker time-field"}>
+            <input type="text" name="hh" className={"form-control hms " + this.props.klass} placeholder="HH" onChange={this.props.onUpdateFieldValue} value={this.props.field_value.hh}/>
+            <span className="pull-left seperator">:</span>
+            <input type="text" name="mm" className={"form-control hms " + this.props.klass} placeholder="MM" onChange={this.props.onUpdateFieldValue} value={this.props.field_value.mm}/>
+            <span className="pull-left seperator">:</span>
+            <input type="text" name="ss" className={"form-control hms " + this.props.klass} placeholder="SS" onChange={this.props.onUpdateFieldValue} value={this.props.field_value.ss}/>
+
+            <input
+                type="hidden"
+                name={this.props.name}
+                id={this.props.name}
+                value={this.props.value}
+                className="form-control"
+                />
+          </div>
+      )
+    } else if (this.props.klass == "pace") {
+      input= (
+        <div className={this.props.klass + "-group"}>
+            <input
+              type={this.props.type}
+              name="mm"
+              value={this.props.field_value.mm}
+              placeholder="MM"
+              onChange={this.props.onUpdateFieldValue}
+              className={"form-control pace-mm pace_field pull-left"}
+              />
+            <span className="pull-left seperator">:</span>
+          <div className={"input-group "}>
+            <input
+                  type={this.props.type}
+                  name="ss"
+                  value={this.props.field_value.ss}
+                  placeholder="SS"
+                  onChange={this.props.onUpdateFieldValue}
+                  className={"form-control pace-ss pace_field"}
+                  />
+              <div className="input-group-addon">{this.props.unit}</div>
+          </div>
+
+          <input
+            type="hidden"
+            name={this.props.name}
+            id={this.props.name}
+            value={this.props.value}
+            className="form-control"
+            />
+        </div>
+      )
+    } else {
+      input= (
+          <div className="input-group">
+            <input
+                type={this.props.type}
+                name={this.props.name}
+                id={this.props.name}
+                value={this.props.value}
+                onChange={this.props.updateStateProp}
+                className={"form-control " + this.props.required}
+
+                />
+            <div className="input-group-addon">{this.props.unit}</div>
+          </div>
+      )
+    }
+
+    return (
+      <div className="form-group col-md-6">
+        <label htmlFor={this.props.name} className="input-label"> {this.props.placeholder} </label>
+        { input }
+      </div>
+    );
+  }
+});
+
+
+var SelectBox = React.createClass({
+  render() {
+  	var ele = function (item) {
+  		return <option value={item.id} key={item.name}> {item.name} </option>
+  	}
+
+  	return (
+  		<div className="form-group col-md-6" key={this.props.name}>
+        <label htmlFor={this.props.name} className="input-label"> {this.props.placeholder} </label>
+	        <select className="form-control"
+	  						name={this.props.name}
+	            	id={this.props.name}
+                value={this.props.value}
+	            	onChange={this.props.updateStateProp}
+	  			>
+	  			{this.props.options.map(ele)}
+	  		</select>
+      </div>
+  	)
+  }
+});
+
+
+var form_state_value = {
+  "activity" : "",
+  "description" : "",
+  "date" : "",
+  "time" : "",
+  "duration" : "",
+  "distance" : "",
+  "effort" : "",
+  "speed" : "",
+  "pace" : "",
+  "average_power" : "",
+  "average_heart_rate" : "",
+  "training_stress_score" : "",
+  "elevation_loss" : "",
+  "elevation_gain" : "",
+  "temp_feels_like" : "",
+  "hydration" : "",
+  "weight_before" : "",
+  "weight_after" : "",
+  "notes" : "",
+  "food" : "",
+  "urination_actual_time" : "",
+  "urination" : "",
+  "bowel_sizing" : "",
+  "bowel_movement" : "",
+  "humidity" : "",
+  "wind" : "",
+  "clouds" : "",
+  "temp" : "",
+  "sweat_rate" : ""
+}
+
+var Form = React.createClass({
+  getInitialState: function() {
+  	form_state_value['authenticity_token'] = $("[name='csrf-token']").attr('content');
+    var dt = new Date();
+    var time = this.changeTimeFormat(dt)
+    form_state_value['activity'] = this.props.setSports;
+    return {
+      form_value: form_state_value,
+      date_field: { dd: dt.getDate(), mm: (dt.getMonth()+1), yy: dt.getFullYear() },
+      time_field: time,
+      duration_field: { hh: 0, mm: 0, ss: 0},
+      pace_unit: this.props.units.swimming_pace,
+      pace_field: { mm: 0, ss: 0}
+    }
+  },
+  componentDidMount: function() {
+    var $activity = $('#activity')
+
+    var self = this;
+
+    if($activity.val() == 2 || $activity.val() == 4) {
+      $('#pace').attr('disabled', true);
+      $('.pace_field').attr('disabled', true);
+    } else {
+      $('#speed').attr('disabled', true);
+    }
+
+    $(document).on('click', '.date_field, .pace_field, .duration_field, .time_field', function() {
+      $(this).select();
+    })
+
+
+    $(document).on('change', '.duration_field, #distance, #activity', function() {
+
+      var du = $('.duration_field').map(function(a,b) { return $(b).val() })
+
+      var seconds = self.msToSecond(du[0], du[1], du[2]);
+      var minutes = (seconds / 60)
+
+      var dist = ($('#distance').val() == "") ? 0 : $('#distance').val();
+
+      var speed = 0, pace = 0, pace_min = "00:00", pace_val = 0;
+
+      if (dist != 0) {
+        speed = (dist / minutes * 60).toFixed(2)
+        // speed = (dist / seconds).toFixed(2)
+      }
+
+      var state = self.state.form_value,
+          pace_field = self.state.pace_field
+
+      if($activity.val() == 2 || $activity.val() == 4) {
+        state["speed"] = speed;
+        state["pace"] = 0;
+
+        pace_field['mm'] = "00";
+        pace_field['ss'] = "00";
+      } else {
+
+        if (dist != 0) {
+          if($activity.val() == 3) {
+
+            pace_val = ( minutes / dist ),
+            pace = Math.round(( minutes / dist ) * 60),
+            pace_min = self.secondsToHms(pace).split(":");
+          } else {
+
+            var swimming_calc = (self.props.units.name == "Impreial") ? 1760 : 1000;
+
+            pace_val = (minutes / (dist * swimming_calc / 100)),
+            pace =  Math.round( pace_val * 60 ).toFixed(2),
+            pace_min = self.secondsToHms(pace).split(":");
+          }
+        }
+
+        state["pace"] = pace_val
+
+        pace_field['mm'] = pace_min[0];
+        pace_field['ss'] = pace_min[1];
+
+        state["speed"] = 0;
+      }
+
+      self.setState(state);
+      self.setState(pace_field);
+    })
+
+
+    $('.activity-form').validate();
+
+    var unit_name = this.props.units.name;
+    var validation = {
+      weight: {
+        Metric: {
+          min: 25,
+          max: 200,
+          unit: 'kg'
+        },
+        Impreial: {
+          min: 50,
+          max: 400,
+          unit: 'lbs'
+        }
+      },
+      temp: {
+        Metric: {
+          min: -20,
+          max: 50,
+          unit: 'oC'
+        },
+        Impreial: {
+          min: 0,
+          max: 120,
+          unit: 'oF'
+        }
+      }
+    }
+
+    var weight_msg = validation.weight[unit_name].min + validation.weight[unit_name].unit + " to " + validation.weight[unit_name].max + validation.weight[unit_name].unit;
+
+    var temp_msg = validation.temp[unit_name].min + validation.temp[unit_name].unit + " to " + validation.temp[unit_name].max + validation.temp[unit_name].unit;
+
+    $.validator.addMethod("weight", function(value, element) {
+
+      var weight = false,
+          min = validation.weight[unit_name].min,
+          max = validation.weight[unit_name].max;
+
+      if( value >= min && value <= max) {
+        weight = true;
+      }
+      return weight;
+    }, 'Invalid. The range: ' + weight_msg);
+
+    $.validator.addClassRules("weight", { weight: true });
+
+    $.validator.addMethod("temp", function(value, element) {
+      var temp = false,
+          min = validation.temp[unit_name].min,
+          max = validation.temp[unit_name].max;
+
+      if( value >= min && value <= max) {
+        temp = true;
+      }
+      return temp;
+    }, 'Invalid. The range: ' + temp_msg);
+
+    $.validator.addClassRules("temp", { temp: true });
+  },
+  updateState: function(e) {
+    if (e.target.name == "activity") {
+      if(e.target.value == 1 || e.target.value == 3) {
+        $('#speed').attr('disabled', true)
+        $('#pace').attr('disabled', false)
+        $('.pace_field').attr('disabled', false);
+
+        if (e.target.value == 1 ) {
+           this.setState({pace_unit: this.props.units.swimming_pace})
+        } else {
+          this.setState({pace_unit: this.props.units.pace})
+        }
+
+      } else  {
+        $('#pace').attr('disabled', true)
+        $('#speed').attr('disabled', false)
+        $('.pace_field').attr('disabled', true);
+      }
+    }
+
+    var state = this.state.form_value;
+    var val = (e.target.name != 'description' && e.target.name != 'notes') ? $.trim(e.target.value) : e.target.value;
+
+    state[e.target.name] =  val;
+
+    this.setState({form_value: state});
+
+  },
+  updateFieldValue: function (e) {
+
+    var state = {}, state_wrap = {};
+
+    if (!isNaN($.trim(e.target.value)) || e.target.name == "period") {
+
+      if($(e.target).hasClass('date_field')) {
+
+        state = this.state.date_field;
+
+        var val = $.trim(e.target.value);
+
+        if (e.target.name == "mm" && ( val > 12 || val.length > 2)) return false;
+
+        if (e.target.name == "dd" && ( val > 31 || val.length > 2)) return false;
+
+        if (e.target.name == "yy" && $.trim(e.target.value).length > 4) return false;
+
+        // if(e.target.value == "") e.target.value = "00";
+
+        state[e.target.name] =  $.trim(e.target.value);
+        state_wrap = {date_field: state}
+      } else if ($(e.target).hasClass('time_field')) {
+
+        state = this.state.time_field;
+        var val = $.trim(e.target.value);
+
+        if (e.target.name == "hh" && $.trim(e.target.value) > 12) return false;
+
+        if (e.target.name == "mm" && $.trim(e.target.value) > 60) return false;
+
+        if (e.target.name == "ss" && $.trim(e.target.value) > 60) return false;
+
+        // if(e.target.value == "") e.target.value = "00";
+
+        state[e.target.name] =  $.trim(e.target.value);
+        state_wrap = {time_field: state}
+      } else if ($(e.target).hasClass('pace_field')) {
+
+          state = this.state.pace_field;
+
+          // if(e.target.value == "") e.target.value = 0;
+
+          state[e.target.name] =  $.trim(e.target.value);
+          state_wrap = {pace_field: state}
+
+      } else {
+        // if(e.target.value == "") e.target.value = 0;
+
+        state = this.state.duration_field;
+        state[e.target.name] =  $.trim(e.target.value);
+        state_wrap = {duration_field: state}
+      }
+
+      this.setState(state_wrap);
+    }
+  },
+  changeTimeFormat: function (dt) {
+
+    var sec = (dt.getSeconds().toString().length == 1) ? "0" + dt.getSeconds() : dt.getSeconds()
+    var hours = (dt.getHours().toString().length == 1) ? "0" + dt.getHours() : dt.getHours()
+    var min = (dt.getMinutes().toString().length == 1) ? "0" + dt.getMinutes() : dt.getMinutes()
+
+    var hh = parseInt(dt.getHours());
+    var timeObj = { "hh": hours , "mm": '00', "ss": '00' , "period": 'am' }
+
+    if(hh > 12){
+
+      timeObj['hh'] = (hh - 12);
+      timeObj['period'] = 'pm';
+
+    } else if(hh == 0) {
+
+      timeObj['hh'] = (hh + 12);
+      timeObj['period'] = 'am';
+
+    } else if(hh == 12) {
+
+      timeObj['hh'] = 12;
+      timeObj['period'] = 'pm';
+
+    } else {
+      timeObj['period'] = 'am';
+    }
+
+    return timeObj;
+  },
+  addTimeFormat: function (time_state) {
+    // var hh = parseInt(time_state.hh)
+
+    // if(time_state.period == "pm") {
+
+    //   time_state.hh = (hh == 12) ? 12 : (hh + 12);
+    // } else {
+    //   if(hh == 12) {
+    //     time_state.hh = 0;
+    //   }
+    // }
+
+    return time_state.hh + ":" + time_state.mm + ":" + time_state.ss
+  },
+  msToSecond: function (hh, mm, ss) {
+    hh = (hh == "") ? 0 : parseInt(hh);
+    mm = (mm == "") ? 0 : parseInt(mm);
+    ss = (ss == "") ? 0 : parseInt(ss);
+
+    return (+hh) * 60 * 60 + (+mm) * 60 + (+ss);
+  },
+  secondsToHms: function(d) {
+    if (isNaN(d)) return "0:0:0";
+
+    d = Number(d);
+    var h = Math.floor(d / 3600);
+    var m = Math.floor(d % 3600 / 60);
+    var s = Math.floor(d % 3600 % 60);
+    return ((h > 0 ? h + ":" + (m < 10 ? "0" : "") : "") + m + ":" + (s < 10 ? "0" : "") + s);
+  },
+  onSubmit: function (e) {
+
+    var state = this.state.form_value;
+    var date_state = this.state.date_field,
+        time_state = this.state.time_field,
+        duration_state = this.state.duration_field,
+        pace_state = this.state.pace_field;
+
+    if (this.state.form_value.weight_before < this.state.form_value.weight_after) {
+      if ( confirm("Weight After is expected to be less than Weight Before even with hydration ")) {
+        e.preventDefault();
+        return false ;
+      } else {
+        e.preventDefault();
+        return false ;
+      }
+    }
+
+    state['date'] = date_state.yy + "-" + date_state.mm + "-" + date_state.dd
+    state['time'] = this.addTimeFormat(time_state)
+    state['duration'] = duration_state.hh + ":" + duration_state.mm + ":" + duration_state.ss
+    var minutes = this.msToSecond("", parseInt(pace_state.mm), parseInt(pace_state.ss));
+    state['pace'] = (!isNaN(minutes)) ? (minutes / 60) : 0;
+
+    this.setState({form_value: state});
+    // Set spotrs in localstorage to persist in new form
+    var sports = this.props.selectedSports;
+    if(sports.length > 1) {
+      localStorage.setItem('setSports', state.activity);
+    }
+  },
+  render() {
+    return (
+      <form className="activity-form" action="/activities" method="post" onSubmit={ this.onSubmit}>
+      <div className="activity-wrapper col-md-6">
+        <ul  className="nav nav-tabs">
+          <li className="active">
+            <a  href="#basic-info" data-toggle="tab">Basic Info</a>
+          </li>
+        </ul>
+      <div className="tab-content clearfix">
+        <div className="tab-pane active" id="basic-info">
+        	<input type="hidden" name="authenticity_token" value={this.state.form_value.authenticity_token} />
+          <SelectBox name="activity" options={this.props.activity} updateStateProp={this.updateState} placeholder="Sport" value={this.state.form_value.activity}/>
+          <Input type="text" name="description" value={this.state.form_value.description} updateStateProp={this.updateState}  placeholder="Description"/>
+
+          <Input type="text" name="date" field_value={this.state.date_field} value={this.state.form_value.date} updateStateProp={this.updateState} unit="calendar" format="yyyy-MM-dd" placeholder="Date ( MM / DD / YYYY )" triggerEvent={this.datetimepicker} onUpdateFieldValue={ this.updateFieldValue }/>
+
+          <Input type="text" name="time" field_value={this.state.time_field} value={this.state.form_value.time} updateStateProp={this.updateState} unit="clock-o" format="hh:mm:ss" placeholder="Time ( HH : MM : SS )" triggerEvent={this.datetimepicker} onUpdateFieldValue={ this.updateFieldValue } klass="time_field"/>
+
+          <Input type="text" name="duration" field_value={this.state.duration_field} value={this.state.form_value.duration} updateStateProp={this.updateState}  unit="clock-o" format="hh:mm:ss" placeholder="Duration ( HH : MM : SS )" triggerEvent={this.datetimepicker} onUpdateFieldValue={ this.updateFieldValue } klass="duration_field"/>
+
+          <Input type="text" name="distance" value={this.state.form_value.distance} updateStateProp={this.updateState} unit={this.props.units.distance} placeholder="Distance" required="required number"/>
+
+          <SelectBox name="effort" options={this.props.effort} updateStateProp={this.updateState}  placeholder="Effort"/>
+
+          <Input type="text" name="speed" value={this.state.form_value.speed} updateStateProp={this.updateState} unit={this.props.units.speed} placeholder="Speed" required="required number"/>
+
+          <Input type="text" name="pace" value={this.state.form_value.pace} field_value={this.state.pace_field} updateStateProp={this.updateState} klass="pace" unit={ this.state.pace_unit } onUpdateFieldValue={ this.updateFieldValue } placeholder="Pace ( MM : SS )"/>
+
+          <Input type="text" name="temp_feels_like" value={this.state.form_value.temp_feels_like} updateStateProp={this.updateState} unit={this.props.units.temp} placeholder="Temp feels like" required="required number temp"/>
+          <Input type="text" name="weight_before" value={this.state.form_value.weight_before} updateStateProp={this.updateState} unit={this.props.units.weight} placeholder="Weight Before" required="required number weight"/>
+          <Input type="text" name="weight_after" value={this.state.form_value.weight_after} updateStateProp={this.updateState} unit={this.props.units.weight} placeholder="Weight After" required="required  number weight"/>
+          <Input type="text" name="hydration" value={this.state.form_value.hydration} updateStateProp={this.updateState} unit={this.props.units.hydration} placeholder="Hydration" required="required number"/>
+          <Input type="text" name="notes" value={this.state.form_value.notes} updateStateProp={this.updateState} placeholder="Notes" />
+        </div>
+      </div>
+      </div>
+
+      <div className="activity-wrapper col-md-6">
+        <ul  className="nav nav-tabs">
+          <li className="active">
+            <a  href="#supplemental-info" data-toggle="tab"> Result </a>
+          </li>
+        </ul>
+        <div className="tab-content clearfix">
+          <div className="tab-pane active" id="supplemental-info">
+            <div className="sweat_rate_result"> { 'Sweat Rate : 0.0' +  this.props.units.sweat_rate }</div>
+          </div>
+        </div>
+      </div>
+
+        <div className="col-md-12 text-center submit-button">
+          <a href="/dashboard" className="btn btn-default col-md-2"> Cancel </a>
+          <input type="submit" value="Calculate" className="btn btn-primary col-md-2"/>
+        </div>
+      </form>
+    )
+  }
+})
+
+var Activity = React.createClass({
+  getInitialState: function() {
+    return {
+      units: units[0],
+      sports: sports,
+      effort: [
+				{ "id": "high", "name": "High"},
+				{ "id": "medium", "name": "Medium"},
+        { "id": "low", "name": "Low"}
+			],
+      selectedSports: widgets,
+      setSports: 1
+    }
+  },
+  componentWillMount: function() {
+    var sports = this.state.selectedSports;
+
+    if(sports.length > 1) {
+      var val = localStorage.getItem('setSports');
+      this.state.setSports = (val != undefined) ? val : "";
+
+    } else {
+      localStorage.setItem('setSports', sports[0]);
+      this.state.setSports = sports[0]
+    }
+  },
+  render() {
+    return (
+      <div className="container">
+        <div className="col-md-12 activity-head">
+          <h2> <i className="fa fa-calculator"></i> Sweat Rate Calculator </h2>
+        </div>
+        <div className="row">
+          <Form units={ this.state.units } activity={ this.state.sports } effort={this.state.effort} setSports={ this.state.setSports } selectedSports={ this.state.selectedSports }/>
+        </div>
+      </div>
+    )
+  }
+})
+
+ReactDOM.render(
+   <Activity />,
+    document.getElementById('app-container')
+);
+
+      // <div className="activity-wrapper col-md-6">
+      //   <ul  className="nav nav-tabs">
+      //     <li className="active">
+      //       <a  href="#supplemental-info" data-toggle="tab">Supplemental Info</a>
+      //     </li>
+      //   </ul>
+      // <div className="tab-content clearfix">
+      //   <div className="tab-pane active" id="supplemental-info">
+      //     <Input type="text" name="elevation_loss" value={this.state.elevation_loss} updateStateProp={this.updateState} unit={this.props.units.elevation_loss} placeholder="Elevation Loss"/>
+      //     <Input type="text" name="elevation_gain" value={this.state.elevation_gain} updateStateProp={this.updateState} unit={this.props.units.elevation_gain} placeholder="Elevation Gain"/>
+      //     <Input type="text" name="average_power" value={this.state.average_power} updateStateProp={this.updateState} unit={this.props.units.power} placeholder="Average Power"/>
+      //     <Input type="text" name="average_heart_rate" value={this.state.average_heart_rate} updateStateProp={this.updateState} unit={this.props.units.average_heart_rate} placeholder="Average Heart Rate"/>
+      //     <Input type="text" name="training_stress_score" value={this.state.training_stress_score} updateStateProp={this.updateState}  placeholder="Training Stress Score"/>
+      //     <Input type="text" name="food" value={this.state.food} updateStateProp={this.updateState} unit={this.props.units.food} placeholder="Food"/>
+      //     <Input type="text" name="urination_actual_time" value={this.state.urination_actual_time} updateStateProp={this.updateState} unit={this.props.units.urination_actual_time} placeholder="Urination Actual Time"/>
+      //     <Input type="text" name="urination" value={this.state.urination} updateStateProp={this.updateState} unit={this.props.units.urination} placeholder="Urination"/>
+      //     <Input type="text" name="bowel_sizing" value={this.state.bowel_sizing} updateStateProp={this.updateState} placeholder="Bowel Sizing" />
+      //     <Input type="text" name="bowel_movement" value={this.state.bowel_movement} updateStateProp={this.updateState} unit={this.props.units.bowel_movement} placeholder="Bowel Movement"/>
+      //     <Input type="text" name="humidity" value={this.state.humidity} updateStateProp={this.updateState} unit={this.props.units.humidity} placeholder="Humidity"/>
+      //     <Input type="text" name="wind" value={this.state.wind} updateStateProp={this.updateState} unit={this.props.units.wind} placeholder="Wind"/>
+      //     <Input type="text" name="clouds" value={this.state.clouds} updateStateProp={this.updateState} placeholder="Clouds" />
+      //     <Input type="text" name="temp" value={this.state.temp} updateStateProp={this.updateState} placeholder="Temp" unit={this.props.units.temp}/>
+      //     </div>
+      //   </div>
+      // </div>
+
+</script>
