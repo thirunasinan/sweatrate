@@ -31,6 +31,7 @@ class ActivitiesController < ApplicationController
 		convert_impreial_to_metric
 		params[:sweat_rate] = calc_sweatrate
 
+
 		time_calc_duration
 		# time_calc_pace
 
@@ -40,11 +41,16 @@ class ActivitiesController < ApplicationController
 
 		@activities.imperial_temp_feels_like = @temp_feels_like
 
+		if calc_sweatrate > 3.0
+			redirect_to :back, warning: "You have entered weights and hydration that suggests sweat rate over 3 L/hr.  This is well beyond normal sweat rates.  Please recheck your inputs."
+		else
 		if @activities.save
 			redirect_to edit_activity_path(@activities), notice: "Activity created successful"
-		else
-			redirect_to :back, warning: @activities.errors
+		else 
+		 redirect_to :back, warning: @activities.errors 
 		end
+	end
+
 	end
 
 	def update

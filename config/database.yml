@@ -86,4 +86,4 @@ production:
   <<: *default
   database: sweatrate_production
   username: pguser
-  password: <%= ENV['TOYAPP_DATABASE_PASSWORD'] %>
+  password: Welcome2016
