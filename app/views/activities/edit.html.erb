@@ -319,6 +319,20 @@ var Form = React.createClass({
 
     var temp_msg = validation.temp[unit_name].min + validation.temp[unit_name].unit + " to " + validation.temp[unit_name].max + validation.temp[unit_name].unit;
 
+ $.validator.addMethod("nonNegative", function(value, element) {
+
+      var nonNegative = false;        
+
+          if(value >= 0){
+            nonNegative = true;
+          }
+          return nonNegative;
+
+    },'Invalid. The value should be non negative');
+
+    $.validator.addClassRules("nonNegative", { nonNegative: true });
+
+
     $.validator.addMethod("weight", function(value, element) {
 
       var weight = false, 
@@ -518,6 +532,19 @@ var Form = React.createClass({
         return false ;
       }
     }
+    else if( this.state.form_value.weight_after < (this.state.form_value.weight_before)* 0.9 ){
+
+ 
+      if ( confirm("Weight loss greater than 10% appears too extreme.  Please check and revise Before and After weights ")) {
+        e.preventDefault();
+        return false ;
+      } else {
+        e.preventDefault();
+        return false ;
+      }
+    }else if( ( this.state.form_value.weight_after >= (this.state.form_value.weight_before)* 0.9) &&  (this.state.form_value.weight_after <= this.state.form_value.weight_before) ){  
+
+
 
     state['date'] = date_state.yy + "-" + date_state.mm + "-" + date_state.dd
     state['time'] = this.addTimeFormat(time_state)
@@ -542,7 +569,10 @@ var Form = React.createClass({
         return true ;
       }
     } 
-  },
+  }
+
+    }
+,
   calc_fahrenheit: function(temp) {
     return (this.props.units.name != "Metric") ? (temp*9/5 + 32).toFixed(2) : temp.toFixed(2)
   },
@@ -589,7 +619,7 @@ var Form = React.createClass({
           
           <Input type="text" name="duration" field_value={this.state.duration_field} value={this.state.form_value.duration} updateStateProp={this.updateState}  unit="clock-o" format="hh:mm:ss" placeholder="Duration ( HH : MM : SS )" triggerEvent={this.datetimepicker} onUpdateFieldValue={ this.updateFieldValue } klass="duration_field"/>
 
-          <Input type="text" name="distance" value={this.state.form_value.distance} updateStateProp={this.updateState} unit={this.props.units.distance} placeholder="Distance" required="required number"/>
+          <Input type="text" name="distance" value={this.state.form_value.distance} updateStateProp={this.updateState} unit={this.props.units.distance} placeholder="Distance" required="required number nonNegative"/>
           <SelectBox name="effort" value={this.state.form_value.effort} options={this.props.effort} updateStateProp={this.updateState}  placeholder="Effort"/>
 
           <Input type="text" name="speed" value={this.state.form_value.speed} updateStateProp={this.updateState} unit={this.props.units.speed} placeholder="Speed" required="required number"/>
@@ -597,14 +627,14 @@ var Form = React.createClass({
           <Input type="text" name="pace" value={this.state.form_value.pace} field_value={this.state.pace_field} updateStateProp={this.updateState} klass="pace" unit={ this.state.pace_unit } onUpdateFieldValue={ this.updateFieldValue } placeholder="Pace ( MM : SS )"/>
           
           <Input type="text" name="temp_feels_like" value={this.state.form_value.temp_feels_like} updateStateProp={this.updateState} unit={this.props.units.temp} placeholder="Temp feels like" required="required number temp"/>
-          <Input type="text" name="weight_before" value={this.state.form_value.weight_before} updateStateProp={this.updateState} unit={this.props.units.weight} placeholder="Weight Before" required="required number weight"/>
-          <Input type="text" name="weight_after" value={this.state.form_value.weight_after} updateStateProp={this.updateState} unit={this.props.units.weight} placeholder="Weight After" required="required number weight"/>
-          <Input type="text" name="hydration" value={this.state.form_value.hydration} updateStateProp={this.updateState} unit={this.props.units.hydration} placeholder="Hydration" required="required number"/>
+          <Input type="text" name="weight_before" value={this.state.form_value.weight_before} updateStateProp={this.updateState} unit={this.props.units.weight} placeholder="Weight Before" required="required number nonNegative weight"/>
+          <Input type="text" name="weight_after" value={this.state.form_value.weight_after} updateStateProp={this.updateState} unit={this.props.units.weight} placeholder="Weight After" required="required number nonNegative weight"/>
+          <Input type="text" name="hydration" value={this.state.form_value.hydration} updateStateProp={this.updateState} unit={this.props.units.hydration} placeholder="Hydration" required="required nonNegative number"/>
           <Input type="text" name="notes" value={this.state.form_value.notes} updateStateProp={this.updateState} placeholder="Notes" />
         </div>
       </div>
       </div> 
-      `
+      
       <div className="activity-wrapper col-md-6">
         <ul  className="nav nav-tabs">
           <li className="active">
