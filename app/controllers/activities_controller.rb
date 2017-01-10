@@ -31,6 +31,7 @@ class ActivitiesController < ApplicationController
 		convert_impreial_to_metric
 		params[:sweat_rate] = calc_sweatrate
 
+		
 
 		time_calc_duration
 		# time_calc_pace
@@ -40,6 +41,8 @@ class ActivitiesController < ApplicationController
 		@activities.sports_id = @activities.activity
 
 		@activities.imperial_temp_feels_like = @temp_feels_like
+
+		debugger
 
 		if calc_sweatrate > 3.0
 			redirect_to :back, warning: "You have entered weights and hydration that suggests sweat rate over 3 L/hr.  This is well beyond normal sweat rates.  Please recheck your inputs."
