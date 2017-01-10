@@ -42,7 +42,7 @@ class ActivitiesController < ApplicationController
 
 		@activities.imperial_temp_feels_like = @temp_feels_like
 
-		debugger
+		
 
 		if calc_sweatrate > 3.0
 			redirect_to :back, warning: "You have entered weights and hydration that suggests sweat rate over 3 L/hr.  This is well beyond normal sweat rates.  Please recheck your inputs."
