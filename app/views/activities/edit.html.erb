@@ -622,7 +622,7 @@ var Form = React.createClass({
           <Input type="text" name="distance" value={this.state.form_value.distance} updateStateProp={this.updateState} unit={this.props.units.distance} placeholder="Distance" required="required number nonNegative"/>
           <SelectBox name="effort" value={this.state.form_value.effort} options={this.props.effort} updateStateProp={this.updateState}  placeholder="Effort"/>
 
-          <Input type="text" name="speed" value={this.state.form_value.speed} updateStateProp={this.updateState} unit={this.props.units.speed} placeholder="Speed" required="required number"/>
+          <Input type="text" name="speed" value={this.state.form_value.speed} updateStateProp={this.updateState} unit={this.props.units.speed} placeholder="Speed" required="required number nonNegative"/>
 
           <Input type="text" name="pace" value={this.state.form_value.pace} field_value={this.state.pace_field} updateStateProp={this.updateState} klass="pace" unit={ this.state.pace_unit } onUpdateFieldValue={ this.updateFieldValue } placeholder="Pace ( MM : SS )"/>
           
