@@ -319,6 +319,22 @@ var Form = React.createClass({
 
     var temp_msg = validation.temp[unit_name].min + validation.temp[unit_name].unit + " to " + validation.temp[unit_name].max + validation.temp[unit_name].unit;
 
+     $.validator.addMethod("weightGreater", function(value, element) {
+
+      var weightGreater = false; 
+
+      var weightBefore =   $('#weight_before').val();
+
+      
+          if(value <= weightBefore){
+            weightGreater = true;
+          }
+          return weightGreater;
+
+    },'Weight After is expected to be less than Weight Before even with hydration.');
+
+    $.validator.addClassRules("weightGreater", { weightGreater: true });
+
  $.validator.addMethod("nonNegative", function(value, element) {
 
       var nonNegative = false;        
@@ -628,7 +644,7 @@ var Form = React.createClass({
           
           <Input type="text" name="temp_feels_like" value={this.state.form_value.temp_feels_like} updateStateProp={this.updateState} unit={this.props.units.temp} placeholder="Temp feels like" required="required number temp"/>
           <Input type="text" name="weight_before" value={this.state.form_value.weight_before} updateStateProp={this.updateState} unit={this.props.units.weight} placeholder="Weight Before" required="required number nonNegative weight"/>
-          <Input type="text" name="weight_after" value={this.state.form_value.weight_after} updateStateProp={this.updateState} unit={this.props.units.weight} placeholder="Weight After" required="required number nonNegative weight"/>
+          <Input type="text" name="weight_after" value={this.state.form_value.weight_after} updateStateProp={this.updateState} unit={this.props.units.weight} placeholder="Weight After" required="required number nonNegative weight weightGreater"/>
           <Input type="text" name="hydration" value={this.state.form_value.hydration} updateStateProp={this.updateState} unit={this.props.units.hydration} placeholder="Hydration" required="required nonNegative number"/>
           <Input type="text" name="notes" value={this.state.form_value.notes} updateStateProp={this.updateState} placeholder="Notes" />
         </div>
