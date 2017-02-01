@@ -2,6 +2,8 @@
   var reports_analysis = <%= @reports_analysis.html_safe %>
   var units = <%= @units.html_safe %>
   var used_sports = <%= @used_sports %>
+ 
+
 </script>
 <script type="text/babel">
 
@@ -65,6 +67,8 @@ var Filter = React.createClass({
       }).done(function(response) {
         var response_data = JSON.parse(response.reports_analysis)
         self.props.updateFilter(response_data);
+
+         
       }).error(function(response) {
 
       })
@@ -108,7 +112,7 @@ var AnalysisChart = React.createClass({
         x_axis_def = (unit_name == "Metric") ? [10, 30] : [50, 90];
 
     var reports_analysis = this.state.data;
-
+   
     // Find X-Axis Max and Min
     var high_data_x = $.map(reports_analysis.high,function (val, i){
                       return val[0]
@@ -121,7 +125,7 @@ var AnalysisChart = React.createClass({
         low_data_x = $.map(reports_analysis.low,function (val, i){
                       return val[0]
                     });
-
+     
     var x_axis = $.merge( high_data_x, medium_data_x, low_data_x ),
         x_min = Math.min.apply(Math, x_axis),
         x_max = Math.max.apply(Math, x_axis);
@@ -143,6 +147,7 @@ var AnalysisChart = React.createClass({
     var y_axis = $.merge( high_data_y, medium_data_y, low_data_y ),
         y_min = Math.min.apply(Math, y_axis),
         y_max = Math.max.apply(Math, y_axis);
+
 
     this.state.chart_linear = new Highcharts.Chart({
           chart: {
@@ -178,7 +183,7 @@ var AnalysisChart = React.createClass({
           {
             name: "high",
             type: 'scatter',
-            data: reports_analysis.high,
+            data: reports_analysis.high.sort(),
             color: "rgb(241, 92, 128)",
           },
           {
@@ -188,10 +193,10 @@ var AnalysisChart = React.createClass({
             marker: { enabled: false },
             /* function returns data for trend-line */
             data: (function() {
-              var res = $.each(fitData(reports_analysis.high).data,function (i,val){
+              var res = $.each(fitData(reports_analysis.high.sort()).data,function (i,val){
                 val[1] = parseFloat(val[1].toFixed(2))
               })
-
+               
               return res;
             })()
           },
@@ -200,7 +205,7 @@ var AnalysisChart = React.createClass({
             type: 'scatter',
             // color: 'rgb(124, 181, 236)',
             color: "orange",
-            data: reports_analysis.medium
+            data: reports_analysis.medium.sort()
           },
           {
             name: "Medium",
@@ -210,7 +215,7 @@ var AnalysisChart = React.createClass({
             marker: { enabled: false },
             /* function returns data for trend-line */
             data: (function() {
-              var res = $.each(fitData(reports_analysis.medium).data,function(i,val){
+              var res = $.each(fitData(reports_analysis.medium.sort()).data,function(i,val){
                 val[1] = parseFloat(val[1].toFixed(2))
               })
 
@@ -219,7 +224,7 @@ var AnalysisChart = React.createClass({
           },{
             name: "low",
             type: 'scatter',
-            data: reports_analysis.low,
+            data: reports_analysis.low.sort(),
             color: "green"
           },
           {
@@ -229,7 +234,7 @@ var AnalysisChart = React.createClass({
             marker: { enabled: false },
             /* function returns data for trend-line */
             data: (function() {
-        var res = $.each(fitData(reports_analysis.low).data,function(i, val){
+        var res = $.each(fitData(reports_analysis.low.sort()).data,function(i, val){
                 val[1] = parseFloat(val[1].toFixed(2))
               })
 
@@ -304,12 +309,12 @@ var AnalysisChart = React.createClass({
     });
 
     chart.series[0].update({
-      data: reports_analysis.high
+      data: reports_analysis.high.sort()
     }, true);
 
     chart.series[1].update({
         data: (function() {
-              var res = $.each(fitData(reports_analysis.high).data,function (i,val){
+              var res = $.each(fitData(reports_analysis.high.sort()).data,function (i,val){
                 val[1] = parseFloat(val[1].toFixed(2))
               })
 
@@ -318,12 +323,12 @@ var AnalysisChart = React.createClass({
     }, true);
 
     chart.series[2].update({
-        data: reports_analysis.medium
+        data: reports_analysis.medium.sort()
     }, true);
 
     chart.series[3].update({
         data: (function() {
-              var res = $.each(fitData(reports_analysis.medium).data,function (i,val){
+              var res = $.each(fitData(reports_analysis.medium.sort()).data,function (i,val){
                 val[1] = parseFloat(val[1].toFixed(2))
               })
 
@@ -332,12 +337,12 @@ var AnalysisChart = React.createClass({
     }, true);
 
     chart.series[4].update({
-        data: reports_analysis.low
+        data: reports_analysis.low.sort()
     }, true);
 
     chart.series[5].update({
         data: (function() {
-              var res = $.each(fitData(reports_analysis.low).data,function (i,val){
+              var res = $.each(fitData(reports_analysis.low.sort()).data,function (i,val){
                 val[1] = parseFloat(val[1].toFixed(2))
               })
 
