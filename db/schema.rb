@@ -10,15 +10,16 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161129165907) do
+ActiveRecord::Schema.define(version: 20170210144842) do
 
   # These are extensions that must be enabled in order to support this database
+  enable_extension "tablefunc"
   enable_extension "plpgsql"
 
   create_table "activities", force: :cascade do |t|
-    t.integer "user_id",                                null: false
-    t.integer "sports_id",                              null: false
-    t.integer "activity",                               null: false
+    t.integer "user_id",                                 null: false
+    t.integer "sports_id",                               null: false
+    t.integer "activity",                                null: false
     t.string  "description"
     t.date    "date"
     t.time    "time"
@@ -51,6 +52,7 @@ ActiveRecord::Schema.define(version: 20161129165907) do
     t.float   "sweat_rate"
     t.float   "imperial_temp_feels_like"
     t.float   "imperial_sweat_rate"
+    t.boolean "is_include",               default: true
   end
 
   create_table "sports", force: :cascade do |t|

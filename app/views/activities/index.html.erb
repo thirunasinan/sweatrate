@@ -2,18 +2,25 @@
 	var activity = <%= @activities.html_safe %>
 	var sports = <%= @sports.html_safe %>
   var units = <%= @units.html_safe %>
+
 </script>
 
 
 <script type="text/babel">
 
+
   var CustomRow = React.createClass({
+   getInitialState: function() {
+        return {
+            isChecked: true
+        };
+    },
   		getSportsText: function (activity_id) {
   			var text =""
   			this.props.sports.forEach(function(data){
   				if(activity_id == data.id) {
   					text = data.name;
-  					return
+  					return;
   				}
   			})
 
@@ -84,25 +91,65 @@
         var s = Math.floor(d % 3600 % 60);
         return ((h > 0 ? h + ":" + (m < 10 ? "0" : "") : "") + m + ":" + (s < 10 ? "0" : "") + s); 
       },
+ handleClick: function(e) {
+    
+   var Checked = false;
+   var Act_id =e.target.value;
+
+
+   if ($(e.target).is(':checked')){
+   
+    Checked = true;
+   }
+   else
+   {
+   Checked = false;
+
+   } 
+        
+
+        var csrf = $("[name='csrf-token']").attr('content'); 
+      
+        
+      $.ajax({
+        url: '/activities/isinclude',
+        type: 'GET',
+        headers:{"X-CSRF-Token": csrf },
+        dataType: 'json',
+        data: {
+          "is_include": Checked,
+          "id": Act_id
+        }
+      }).done(function(response) {
+              
+      }).error(function(response) {
+
+      });
+        
+    },
+
+  
+
       render: function() {
           return (
               <tr>
-                <td >{this.props.cell_data.date}</td>
-                <td >{this.getTimeZone(this.props.cell_data.time)}</td>
-                <td >{this.getSportsText(this.props.cell_data.activity)}</td>
-                <td >{this.calc_miles(this.props.cell_data.distance)}</td>
-                <td >{this.calc_miles(this.props.cell_data.speed) }</td>
-                <td >{this.pace_convertion(this.props.cell_data.activity, this.props.cell_data.pace)}</td>
-                <td >{this.getTimeZone(this.props.cell_data.duration)}</td>
-                <td >{this.props.cell_data.effort}</td>
-                <td >{this.calc_fahrenheit(this.props.cell_data.temp_feels_like)}</td>
-                <td >{this.calc_pounds(this.props.cell_data.weight_before)}</td>
-                <td >{this.calc_pounds(this.props.cell_data.weight_after)}</td>
-                <td >{this.calc_gallon(this.props.cell_data.hydration)}</td>
-                <td >{this.props.cell_data.sweat_rate}</td>
-                <td >{this.props.cell_data.description}</td>
-                <td >{this.props.cell_data.notes}</td>
-                <td className="headcol">
+                <td className="text-center" ><input type="checkbox" name="chkInclude"     value={this.props.cell_data.id} onClick={this.handleClick.bind(this)} defaultChecked={this.props.cell_data.is_include} /></td>
+                <td className="text-center" >{this.props.cell_data.date}</td>
+                <td className="text-center">{this.getTimeZone(this.props.cell_data.time)}</td>
+                <td className="text-center">{this.getSportsText(this.props.cell_data.activity)}</td>
+                <td className="text-center">{this.calc_miles(this.props.cell_data.distance)}</td>
+                <td className="text-center">{this.calc_miles(this.props.cell_data.speed) }</td>
+                <td className="text-center">{this.pace_convertion(this.props.cell_data.activity, this.props.cell_data.pace)}</td>
+                <td className="text-center">{this.getTimeZone(this.props.cell_data.duration)}</td>
+                <td className="text-center">{this.props.cell_data.effort}</td>
+                <td className="text-center">{this.calc_fahrenheit(this.props.cell_data.temp_feels_like)}</td>
+                <td className="text-center">{this.calc_pounds(this.props.cell_data.weight_before)}</td>
+                <td className="text-center">{this.calc_pounds(this.props.cell_data.weight_after)}</td>
+                <td className="text-center">{this.calc_gallon(this.props.cell_data.hydration)}</td>
+                <td className="text-center">{this.props.cell_data.sweat_rate}</td>
+                <td className="text-center">{this.props.cell_data.description}</td>
+                <td className="text-center">{this.props.cell_data.notes}</td>
+                <td className="headcol text-center" onClick={this.handleClick}>
                 	<a href={"/activities/" + this.props.cell_data.id+ "/edit"}>
                 		<i className="fa fa-edit"></i>
                 	</a>
@@ -119,9 +166,19 @@
         table_data: activity,
         sports: sports,
         units: units[0],
+        isChkAll : true
+
       }
     },
     componentDidMount: function () {
+    var self = this;
+    $.each(this.state.table_data,function(key,val){
+        if(val["is_include"] == false)
+        {
+          $('#chkAll').prop('checked',false);          
+        }
+    })
+
       $('.table').DataTable( {
           searching:      false,
           ordering  : false,
@@ -131,54 +188,127 @@
           scrollCollapse: true,
           paging:         false,
           fixedColumns:   {
+              leftColumns: 0,
               rightColumns: 1
           }
       });
     },
+   
+ handleCheckedChange: function(e) {
+
+  var chkAll = $('#chkAll');
+  var values = [];
+   var Checked = false;
+  
+  if(chkAll.is(':checked')){
+    console.log('checked');
+    $('input[name="chkInclude"]').each(function(i,v){
+
+         $(this).prop('checked',true);
+         values.push($(this).val());
+  });
+
+  Checked = true;
+  }
+  else
+  {
+  
+       $('input[name="chkInclude"]').each(function(i,v){
+         $(this).prop('checked',false);
+         values.push($(this).val());
+  });
+    Checked = false;
+  }
+
+        var Act_id =values;
+     
+        
+        var csrf = $("[name='csrf-token']").attr('content'); 
+      
+        
+    $.ajax({
+        url: '/activities/isinclude',
+        type: 'GET',
+        headers:{"X-CSRF-Token": csrf },
+        dataType: 'json',
+        data: {
+          "is_include": Checked,
+          "id": Act_id
+        }
+      }).done(function(response) {
+              
+      }).error(function(response) {
+
+      });
+        
+    },
+
     render: function() {
 
       var rows = [];
 
       this.state.table_data.forEach(function(value) {
-          rows.push(<CustomRow units={this.state.units} cell_data={value} key={value.id} sports={this.state.sports}/>);
+          rows.push(<CustomRow units={this.state.units} isChkAll={this.state.isChkAll} cell_data={value} key={value.id} sports={this.state.sports}/>);
       }.bind(this));
 
       return (
       	<div className="container">
           <div className="col-md-12 activity-head">
-            <h2> <i className="fa fa-list-alt"></i> Activities </h2>
+            <h2> <i className="fa fa-list-alt"></i> Activities </h2> 
           </div>
+
+<div class="row">
+
+
+
+         <div className="col-md-6 col-md-offset-6  text-right form-group form-inline">
+
+          <div className="form-group">  
+               <a className="btn" href="/activities.csv"><i className="fa fa-file-excel-o"></i>&nbsp;Export Excel</a>
+            </div>
+      
+         <div className="form-group">  
+               <a className="btn" href="/activities.xls"><i className="fa fa-file-code-o"></i>&nbsp;Export CSV</a>
+            </div>
+        </div>
+
+</div>
+     
+
           <div className="col-md-12 table-wrapper">
 	        <table className="table table-bordered table-striped table-hover activity-table order-column">
 	          <thead>
 	            <tr>
-	                <th ><div>Date </div> <div className="unit">{'(yyyy-mm-dd)'} </div></th>
-	                <th ><div>Time</div> <div className="unit">{'(hh:mm:ss)'} </div></th>
-	                <th ><div>Sport</div> <div className="unit">  &nbsp;. </div></th>
-	                <th ><div>Distance</div> <div className="unit">{'( ' + this.state.units.distance + ' )'}</div></th>
-                  <th ><div>Speed</div>
+              <th className="text-center"><div>Include</div> <input type="checkbox" id="chkAll"   onChange={this.handleCheckedChange.bind(this)} defaultChecked={this.state.isChkAll}  className="chkhead"/></th>
+	                <th className="text-center"><div>Date </div> <div className="unit">{'(yyyy-mm-dd)'} </div></th>
+	                <th className="text-center"><div>Time</div> <div className="unit">{'(hh:mm:ss)'} </div></th>
+	                <th className="text-center"><div>Sport</div> <div className="unit">  &nbsp;. </div></th>
+	                <th className="text-center"><div>Distance</div> <div className="unit">{'( ' + this.state.units.distance + ' )'}</div></th>
+                  <th className="text-center"><div>Speed</div>
                       <div className="unit">{'( ' + this.state.units.speed + ')'}</div>
                   </th>
-                  <th><div> Pace </div> 
+                  <th className="text-center"><div> Pace </div> 
                     <div className="unit">{'( ' + this.state.units.pace + ' / ' + this.state.units.swimming_pace + ')'}</div> 
                   </th>
-                  <th><div>Duration</div><div className="unit">{'(hh:mm:ss)'}</div></th>
-	                <th ><div>Effort</div> <div className="unit">&nbsp;.</div></th>
-	                <th ><div>Temp feels like </div><div className="unit">{'( ' + this.state.units.temp_feels_like + ' )'}</div></th>
-                  <th><div> Weight Before</div><div className="unit">{'( ' + this.state.units.weight + ' )'}</div></th>
-                  <th><div> Weight After</div><div className="unit">{'( ' + this.state.units.weight + ' )'}</div></th>
-                  <th><div> Hydration </div> <div className="unit">{'( ' + this.state.units.hydration + ' )'}</div></th>
-	                <th ><div>Sweat Rate </div><div className="unit">{'( ' + this.state.units.sweat_rate + ' )'}</div></th>
-                  <th ><div> Description</div></th>
-                  <th ><div>Notes </div></th>
-	                <th className="headcol" ></th>
+                  <th className="text-center"><div>Duration</div><div className="unit">{'(hh:mm:ss)'}</div></th>
+	                <th className="text-center"><div>Effort</div> <div className="unit">&nbsp;.</div></th>
+	                <th className="text-center"><div>Temp feels like </div><div className="unit">{'( ' + this.state.units.temp_feels_like + ' )'}</div></th>
+                  <th className="text-center"><div> Weight Before</div><div className="unit">{'( ' + this.state.units.weight + ' )'}</div></th>
+                  <th className="text-center"><div> Weight After</div><div className="unit">{'( ' + this.state.units.weight + ' )'}</div></th>
+                  <th className="text-center"><div> Hydration </div> <div className="unit">{'( ' + this.state.units.hydration + ' )'}</div></th>
+	                <th className="text-center"><div>Sweat Rate </div><div className="unit">{'( ' + this.state.units.sweat_rate + ' )'}</div></th>
+                  <th className="text-center"><div> Description</div><div className="unit"> &nbsp;.</div></th>
+                  <th className="text-center"><div>Notes </div ><div className="unit"> &nbsp;.</div></th>
+	                <th className="headcol text-center "><div>Edit</div><div className="unit"> &nbsp;.</div></th>
 	            </tr>
 	          </thead>
 	          <tbody>
+           
 	            {rows}
 	          </tbody>
 	        </table>
           </div>
+
 	      </div>
       )
     }

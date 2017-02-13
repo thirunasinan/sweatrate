@@ -1,5 +1,8 @@
 class Activities < ActiveRecord::Base
-	self.table_name= "activities"
+	
+  self.table_name= "activities"
+
+  belongs_to :sport
 
   validates :date, presence: true
   validates :time, presence: true
@@ -79,7 +82,7 @@ class Activities < ActiveRecord::Base
     end
 
     efforts.each do |effort|
-      results_hash[effort] = Activities.select(temp + ", sweat_rate").where(activity: activities, user_id: user_id, effort: effort).to_a
+      results_hash[effort] = Activities.select(temp + ", sweat_rate").where(activity: activities, user_id: user_id, effort: effort,is_include: true ).to_a
     end  
 
     results = {}
@@ -95,15 +98,15 @@ class Activities < ActiveRecord::Base
   def self.sports_range(user_id, unit_name, sports_id)
      result = []
     if (unit_name == "Metric")
-      result << Activities.select("effort, count(*)").where("sports_id = ? and temp_feels_like < ? and user_id = ? ", sports_id, 10, user_id).group(:effort).order(:effort)
-      result << Activities.select("effort, count(*)").where("sports_id = ? and temp_feels_like >= ? and temp_feels_like <= ? and user_id = ? ", sports_id, 10, 20, user_id).group(:effort).order(:effort)
-      result << Activities.select("effort, count(*)").where("sports_id = ? and temp_feels_like > ? and temp_feels_like <= ? and user_id = ? ", sports_id, 20, 30, user_id).group(:effort).order(:effort)
-      result << Activities.select("effort, count(*)").where("sports_id = ? and temp_feels_like > ? and user_id = ? ", sports_id, 30, user_id).group(:effort).order(:effort)
+      result << Activities.select("effort, count(*)").where("sports_id = ? and temp_feels_like < ? and user_id = ? and is_include = ?", sports_id, 10, user_id,true).group(:effort).order(:effort)
+      result << Activities.select("effort, count(*)").where("sports_id = ? and temp_feels_like >= ? and temp_feels_like <= ? and user_id = ? and is_include = ?", sports_id, 10, 20, user_id,true).group(:effort).order(:effort)
+      result << Activities.select("effort, count(*)").where("sports_id = ? and temp_feels_like > ? and temp_feels_like <= ? and user_id = ? and is_include = ?", sports_id, 20, 30, user_id,true).group(:effort).order(:effort)
+      result << Activities.select("effort, count(*)").where("sports_id = ? and temp_feels_like > ? and user_id = ? and is_include = ?", sports_id, 30, user_id,true).group(:effort).order(:effort)
     else
-      result << Activities.select("effort, count(*)").where("sports_id = ? and imperial_temp_feels_like < ? and user_id = ? ", sports_id, 50, user_id).group(:effort).order(:effort)
-      result << Activities.select("effort, count(*)").where("sports_id = ? and imperial_temp_feels_like >= ? and imperial_temp_feels_like <= ? and user_id = ? ", sports_id, 50, 70, user_id).group(:effort).order(:effort)
-      result << Activities.select("effort, count(*)").where("sports_id = ? and imperial_temp_feels_like > ? and imperial_temp_feels_like <= ? and user_id = ? ", sports_id, 70, 90, user_id).group(:effort).order(:effort)
-      result << Activities.select("effort, count(*)").where("sports_id = ? and imperial_temp_feels_like > ? and user_id = ? ", sports_id, 90, user_id).group(:effort).order(:effort)
+      result << Activities.select("effort, count(*)").where("sports_id = ? and imperial_temp_feels_like < ? and user_id = ? and is_include = ?", sports_id, 50, user_id,true).group(:effort).order(:effort)
+      result << Activities.select("effort, count(*)").where("sports_id = ? and imperial_temp_feels_like >= ? and imperial_temp_feels_like <= ? and user_id = ? and is_include = ?", sports_id, 50, 70, user_id,true).group(:effort).order(:effort)
+      result << Activities.select("effort, count(*)").where("sports_id = ? and imperial_temp_feels_like > ? and imperial_temp_feels_like <= ? and user_id = ? and is_include = ?", sports_id, 70, 90, user_id,true).group(:effort).order(:effort)
+      result << Activities.select("effort, count(*)").where("sports_id = ? and imperial_temp_feels_like > ? and user_id = ? and is_include = ?", sports_id, 90, user_id,true).group(:effort).order(:effort)
     end
     result
   end
@@ -137,26 +140,36 @@ class Activities < ActiveRecord::Base
   def self.reports_data(user_id, effort, activities, low, high, unit_name)
     if (unit_name == "Metric")
       query_results = Activities.select("min(sweat_rate) as min_temp, max(sweat_rate) as max_temp, avg(sweat_rate) as avg_temp, max(sweat_rate)-min(sweat_rate) as range_temp, count(*) as count_temp, stddev(sweat_rate) as stddev_temp").
-        where("user_id = ? and effort = ? and activity in (?) and temp_feels_like > ? and temp_feels_like <= ?", 
-          user_id, effort, activities, low, high).all
+        where("user_id = ? and effort = ? and activity in (?) and temp_feels_like > ? and temp_feels_like <= ? and is_include = ?", 
+          user_id, effort, activities, low, high,true).all
     else
       query_results = Activities.select("min(sweat_rate) as min_temp, max(sweat_rate) as max_temp, avg(sweat_rate) as avg_temp, max(sweat_rate)-min(sweat_rate) as range_temp, count(*) as count_temp, stddev(sweat_rate) as stddev_temp").
-        where("user_id = ? and effort = ? and activity in (?) and imperial_temp_feels_like > ? and imperial_temp_feels_like <= ?", 
-          user_id, effort, activities, low, high).all
+        where("user_id = ? and effort = ? and activity in (?) and imperial_temp_feels_like > ? and imperial_temp_feels_like <= ? and is_include = ?", 
+          user_id, effort, activities, low, high,true).all
     end
 
     query_results[0]
+  end
+
+
+  def self.to_csv(options = {})
+    CSV.generate(options) do |csv|
+      csv << column_names
+      all.each do |product|
+        csv << product.attributes.values_at(*column_names)
+      end
+    end
   end
 
   def self.reports_count_data(user_id, effort, activities, low, high, unit_name)
 
     if (unit_name == "Metric")
       query_results = Activities.select("count(*) as count_temp").
-        where("user_id = ? and effort = ? and activity in (?) and temp_feels_like > ? and temp_feels_like <= ?", 
-          user_id, effort, activities, low, high).all
+        where("user_id = ? and effort = ? and activity in (?) and temp_feels_like > ? and temp_feels_like <= ? and is_include = ?", 
+          user_id, effort, activities, low, high, true).all
     else 
       query_results = Activities.select("count(*) as count_temp").
-        where("user_id = ? and effort = ? and activity in (?) and imperial_temp_feels_like > ? and imperial_temp_feels_like <= ?", 
+        where("user_id = ? and effort = ? and activity in (?) and imperial_temp_feels_like > ? and imperial_temp_feels_like <= ? and is_include = ?", 
           user_id, effort, activities, low, high).all
     end
 

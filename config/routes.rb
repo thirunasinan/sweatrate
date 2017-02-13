@@ -6,6 +6,8 @@ Rails.application.routes.draw do
   get '/dashboard' => 'dashboard#index', :as => :dashboard
   post '/dashboard/add_widget', to: 'dashboard#add_widget'
 
+  #post '/activities/isinclude', to: 'activities#isinclude'
+
   resources :activities, :as => 'activities' do
     collection do
       get :swimming
@@ -15,10 +17,14 @@ Rails.application.routes.draw do
       get :reports_table
       get :reports_coverage
       get :reports_analysis
+
+      get :isinclude
+
+      #get :isinclude
     end
 
     member do
-      post :update
+      post :update      
     end
   end
 

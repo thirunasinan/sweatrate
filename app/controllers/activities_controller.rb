@@ -1,7 +1,8 @@
 class ActivitiesController < ApplicationController
-	before_filter :units, :only => [:index, :new, :edit, :swimming, :cycling, :running, :other, :reports_analysis]
+	before_filter :units, :only => [:isinclude, :index, :new, :edit, :swimming, :cycling, :running, :other, :reports_analysis]
 	before_filter :set_report_selected_tab, :only => [:reports_table, :reports_coverage, :reports_analysis]
 	before_filter :set_dashboard_selected_tab, :only => [:swimming, :cycling, :running]
+
 
 
 	def units
@@ -9,11 +10,43 @@ class ActivitiesController < ApplicationController
 	end
 
 	def index
+
 		@selected_tab = :all_activity
 
 		@sports = Sports.all.to_json
 		@activities = Activities.where(user_id: current_user.id).to_json
+     
+		@activity= Reports.where(user_id: current_user.id)
+		#records = Activities.joins(:sports).select('distinct activities.*,sport.name').to_a
+
+  		
+		respond_to do |format|
+			format.html
+      		format.csv { send_data @activity.to_csv }
+      		format.xls { send_data @activity.to_csv(col_sep: "\t") }
+  			end
+
+
 	end
+
+	def isinclude 
+			isChecked = params[:is_include]
+			id = params[:id]		
+			
+			if Activities.where(:id => id).update_all(is_include: isChecked)
+				@selected_tab = :all_activity
+				@sports = Sports.all.to_json
+				@activities = Activities.where(user_id: current_user.id).to_json
+
+				respond_to do | format|
+					format.html{render "index" }
+				end
+			else
+					redirect_to :back
+			end
+
+			
+		end
 
 	def new
 		@selected_tab = :sweat_rate_calc
@@ -75,8 +108,10 @@ class ActivitiesController < ApplicationController
 	
 		else
 		if @activities.update(activity_params)
+
 			if params[:submit] == "Save"
 				redirect_to activities_path, notice: "Activity updated successful"
+			
 			else
 				redirect_to edit_activity_path(@activities), notice: "Activity updated successful"
 			end
@@ -211,6 +246,7 @@ end
 			params.permit(:activity,:description,:date,:time,:duration,:distance,:effort,:speed,:pace,:average_power,:average_heart_rate, :training_stress_score, :elevation_loss, :elevation_gain, :temp_feels_like, :hydration, :weight_before, :weight_after, :notes, :food, :urination_actual_time, :urination, :bowel_sizing, :bowel_movement, :humidity, :wind, :clouds, :temp, :sweat_rate)
 		end
 
+  
 		def fetch_data sports_id
 			Activities.where(user_id: current_user.id, :sports_id => sports_id).all.to_json
 		end
@@ -293,5 +329,6 @@ end
 	  	def pad(n)
 		    return (n < 10) ? ("0" + n.to_s) : n.to_s;
 		end
+		
 
 end
