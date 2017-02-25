@@ -1,5 +1,5 @@
 class ActivitiesController < ApplicationController
-	before_filter :units, :only => [:isinclude, :index, :new, :edit, :swimming, :cycling, :running, :other, :reports_analysis]
+	before_filter :units, :only => [ :index, :new, :edit, :swimming, :cycling, :running, :other, :reports_analysis]
 	before_filter :set_report_selected_tab, :only => [:reports_table, :reports_coverage, :reports_analysis]
 	before_filter :set_dashboard_selected_tab, :only => [:swimming, :cycling, :running]
 
@@ -16,15 +16,58 @@ class ActivitiesController < ApplicationController
 		@sports = Sports.all.to_json
 		@activities = Activities.where(user_id: current_user.id).to_json
      
-		@activity= Reports.where(user_id: current_user.id)
-		#records = Activities.joins(:sports).select('distinct activities.*,sport.name').to_a
-
-  		
+		unit_name = current_user.units.first.name
+		if(unit_name != "Impreial")	
+		 @activity= Reports.where(user_id: current_user.id)	
+		  csv_string = CSV.generate do |csv|
+         csv << ["S.No", "Include", "Date (yyyy-mm-dd)","Time (hh:mm:ss)","Sport","Distance (km)","Speed (kph)",
+         	    "Pace (min/km / min/100m)","Duration (hh:mm:ss)","Effort","Temp Feels Like (oC)" ,"Weight Before (kg)" ,"Weight After (kg)","Hydration (L)",
+         	    "Sweat Rate (L/hr)","Description","Notes"]
+         @activity.each.with_index do |a,index|
+         	
+           csv << [index + 1  ,a.is_include, a.date, (a.time).strftime("%H : %M :%S"), a.sport, a.distance,a.speed ,a.pace ,(a.duration).strftime("%H : %M :%S") ,a.effort,a.temp_feels_like ,a.weight_before ,a.weight_after,
+			a.hydration ,a.sweat_rate ,a.description ,a.notes]
+			
+         end
+    end         
+ 		
 		respond_to do |format|
 			format.html
-      		format.csv { send_data @activity.to_csv }
-      		format.xls { send_data @activity.to_csv(col_sep: "\t") }
+      		format.csv { send_data  csv_string,:type => 'text/csv; charset=iso-8859-1; header=present',
+   						:disposition => "attachment;",filename: "Activities(Metric)-#{DateTime.now.to_s}.csv"}
+
+   			format.xls { send_data  csv_string,:type => 'text/xls; charset=iso-8859-1; header=present',
+   						:disposition => "attachment;",filename: "Activities(Metric)-#{DateTime.now.to_s}.xls"}
+
+      		
   			end
+
+  		else
+  		 @impactivity= Impreports.where(user_id: current_user.id)	
+		  csv_string = CSV.generate do |csv|
+         csv << ["S.No", "Include", "Date (yyyy-mm-dd)","Time (hh:mm:ss)","Sport","Distance (mi)","Speed (mph)",
+         	    "Pace (min/mi / min/100yd)","Duration (hh:mm:ss)","Effort","Temp Feels Like (oF)" ,"Weight Before (lbs)" ,"Weight After (lbs)","Hydration (fl oz)",
+         	    "Sweat Rate (L/hr)","Description","Notes"]
+         @impactivity.each.with_index do |a,index|
+         	
+           csv << [index + 1  ,a.is_include, a.date, (a.time).strftime("%H : %M :%S"), a.sport, a.distance,a.speed ,a.pace ,(a.duration).strftime("%H : %M :%S") ,a.effort,a.temp_feels_like ,a.weight_before ,a.weight_after,
+			a.hydration ,a.sweat_rate ,a.description ,a.notes]
+			
+         end
+    end         
+ 		
+		respond_to do |format|
+			format.html
+      		format.csv { send_data  csv_string,:type => 'text/csv; charset=iso-8859-1; header=present',
+   						:disposition => "attachment;",filename: "Activities(Imperial)-#{DateTime.now.to_s}.csv"}
+
+   			format.xls { send_data  csv_string,:type => 'text/xls; charset=iso-8859-1; header=present',
+   						:disposition => "attachment;",filename: "Activities(Imperial)-#{DateTime.now.to_s}.xls"}
+
+      		
+  			end
+
+  		end
 
 
 	end
@@ -34,6 +77,7 @@ class ActivitiesController < ApplicationController
 			id = params[:id]		
 			
 			if Activities.where(:id => id).update_all(is_include: isChecked)
+				Impactivities.where(:id => id).update_all(is_include: isChecked)
 				@selected_tab = :all_activity
 				@sports = Sports.all.to_json
 				@activities = Activities.where(user_id: current_user.id).to_json
@@ -57,6 +101,8 @@ class ActivitiesController < ApplicationController
 	end
 
 	def create
+		
+		
 		# For Imperial calc
 		@temp_feels_like = temp_for_imperial
 		# @sweat_rate = 0
@@ -69,16 +115,77 @@ class ActivitiesController < ApplicationController
 		time_calc_duration
 		# time_calc_pace
 
+
 		@activities = Activities.new(activity_params)
 		@activities.user_id = current_user.id
 		@activities.sports_id = @activities.activity
 
 		@activities.imperial_temp_feels_like = @temp_feels_like
 
+		unit_name = current_user.units.first.name
+		if(unit_name != "Impreial")				
+				if(params["activity"].to_i == 2 || params["activity"].to_i == 4)
+					@imp_speed = (params["speed"].to_f * 0.621371).round(5)
+				else
+					if(params["activity"].to_i == 1)
+						@imp_pace = (params["pace"].to_f * 0.9144).round(5)
+					else
+						@imp_pace  = (params["pace"].to_f * 1.60934).round(5)
+					end
+				end
+
+				@imp_temp_feels_like = ((params["temp_feels_like"].to_f * 9/5) + 32 ).round(5)
+				@imp_distance  = (params["distance"].to_f * 0.621371).round(6)
+				@imp_weight_before = (params["weight_before"].to_f * 2.20462).round(5)
+				@imp_weight_after = (params["weight_after"].to_f * 2.20462).round(5)
+				@imp_hydration = (params["hydration"].to_f * 33.814).round(5)
+			else
+				if(params["activity"].to_i == 2 || params["activity"].to_i == 4)
+					@imp_speed = (params["speed"].to_f / 0.621371).round(5)
+				else
+					if(params["activity"].to_i == 1)
+						@imp_pace = (params["pace"].to_f / 0.9144).round(5)
+					else
+						@imp_pace = (params["pace"].to_f / 1.60934).round(5)
+					end
+				end
+
+				@imp_temp_feels_like = ((params["temp_feels_like"].to_f - 32) * 5/9).round(5)
+				@imp_distance  = (params["distance"].to_f / 0.621371).round(6)
+				@imp_weight_before = (params["weight_before"].to_f / 2.20462).round(5)
+				@imp_weight_after = (params["weight_after"].to_f / 2.20462).round(5)
+				@imp_hydration = (params["hydration"].to_f / 33.814).round(5)
+			end
+
+
+		@impactivities = Impactivities.new()
+		@impactivities.activity = @activities.activity
+		@impactivities.user_id = current_user.id
+		@impactivities.sports_id = @activities.activity
+		@impactivities.description = @activities.description
+		@impactivities.date = @activities.date
+		@impactivities.time =@activities.time
+		@impactivities.duration =@activities.duration
+		@impactivities.distance = @imp_distance
+		@impactivities.effort = @activities.effort
+		@impactivities.speed = (@imp_speed != nil ) ? @imp_speed : 0
+		@impactivities.pace =(@imp_pace != nil ) ? @imp_pace : 0
+		@impactivities.temp_feels_like =@imp_temp_feels_like
+		@impactivities.weight_after = @imp_weight_after
+		@impactivities.weight_before = @imp_weight_before
+		@impactivities.hydration = @imp_hydration
+		@impactivities.imperial_temp_feels_like = @imp_temp_feels_like
+		@impactivities.notes = @activities.notes
+		@impactivities.sweat_rate = @activities.sweat_rate
+
+
+
 		if calc_sweatrate > 3.0
 			redirect_to :back, warning: "You have entered weights and hydration that suggests sweat rate over 3 L/hr.  This is well beyond normal sweat rates.  Please recheck your inputs."
 		else
 		if @activities.save
+			@impactivities.id = @activities.id
+			@impactivities.save
 			redirect_to edit_activity_path(@activities), notice: "Activity created successful"
 		else 
 		 redirect_to :back, warning: @activities.errors 
@@ -102,22 +209,86 @@ class ActivitiesController < ApplicationController
 
 		@activities.imperial_temp_feels_like = @temp_feels_like
 
+		unit_name = current_user.units.first.name
+		if(unit_name != "Impreial")				
+				if(params["activity"].to_i == 2 || params["activity"].to_i == 4)
+					@imp_speed = (params["speed"].to_f * 0.621371).round(5)
+				else
+					if(params["activity"].to_i == 1)
+						@imp_pace = (params["pace"].to_f * 0.9144).round(5)
+					else
+						@imp_pace  = (params["pace"].to_f * 1.60934).round(5)
+					end
+				end
+
+				@imp_temp_feels_like = ((params["temp_feels_like"].to_f * 9/5) + 32 ).round(5)
+				@imp_distance  = (params["distance"].to_f * 0.621371).round(6)
+				@imp_weight_before = (params["weight_before"].to_f * 2.20462).round(5)
+				@imp_weight_after = (params["weight_after"].to_f * 2.20462).round(5)
+				@imp_hydration = (params["hydration"].to_f * 33.814).round(5)
+			else
+				if(params["activity"].to_i == 2 || params["activity"].to_i == 4)
+					@imp_speed = (params["speed"].to_f / 0.621371).round(5)
+				else
+					if(params["activity"].to_i == 1)
+						@imp_pace = (params["pace"].to_f / 0.9144).round(5)
+					else
+						@imp_pace = (params["pace"].to_f / 1.60934).round(5)
+					end
+				end
+
+				@imp_temp_feels_like = ((params["temp_feels_like"].to_f - 32) * 5/9).round(5)
+				@imp_distance  = (params["distance"].to_f / 0.621371).round(6)
+				@imp_weight_before = (params["weight_before"].to_f / 2.20462).round(5)
+				@imp_weight_after = (params["weight_after"].to_f / 2.20462).round(5)
+				@imp_hydration = (params["hydration"].to_f / 33.814).round(5)
+			end
+
+
+
+		@impactivities = Impactivities.find(params[:id])
+
+		@impactivities.activity = @activities.activity
+		@impactivities.user_id = current_user.id
+		@impactivities.sports_id = @activities.activity
+		@impactivities.description = @activities.description
+		@impactivities.date = @activities.date
+		@impactivities.time =@activities.time
+		@impactivities.duration =@activities.duration
+		@impactivities.distance = @imp_distance
+		@impactivities.effort = @activities.effort
+		@impactivities.speed = (@imp_speed != nil ) ? @imp_speed : 0
+		@impactivities.pace = (@imp_pace != nil ) ? @imp_pace : 0
+		@impactivities.temp_feels_like =@imp_temp_feels_like
+		@impactivities.weight_after = @imp_weight_after
+		@impactivities.weight_before = @imp_weight_before
+		@impactivities.hydration = @imp_hydration
+		@impactivities.imperial_temp_feels_like = @imp_temp_feels_like
+		@impactivities.notes = @activities.notes
+		@impactivities.sweat_rate = @activities.sweat_rate
+
+
+
 
 		if calc_sweatrate > 3.0
 			redirect_to :back, warning: "You have entered weights and hydration that suggests sweat rate over 3 L/hr.  This is well beyond normal sweat rates.  Please recheck your inputs."
 	
 		else
 		if @activities.update(activity_params)
+			
 
 			if params[:submit] == "Save"
-				redirect_to activities_path, notice: "Activity updated successful"
+				@impactivities.update(impactivity_params)
+				redirect_to activities_path, notice: "Activity update saved successful"
 			
 			else
 				redirect_to edit_activity_path(@activities), notice: "Activity updated successful"
 			end
-	
+		else
+			redirect_to :back ,warning: @activities.errors
 		end
 	end
+	
 end
 
 
@@ -246,6 +417,10 @@ end
 			params.permit(:activity,:description,:date,:time,:duration,:distance,:effort,:speed,:pace,:average_power,:average_heart_rate, :training_stress_score, :elevation_loss, :elevation_gain, :temp_feels_like, :hydration, :weight_before, :weight_after, :notes, :food, :urination_actual_time, :urination, :bowel_sizing, :bowel_movement, :humidity, :wind, :clouds, :temp, :sweat_rate)
 		end
 
+		def impactivity_params
+			params.permit(:activity,:description,:date,:time,:duration,:distance,:effort,:speed,:pace,:average_power,:average_heart_rate, :training_stress_score, :elevation_loss, :elevation_gain, :temp_feels_like, :hydration, :weight_before, :weight_after, :notes, :food, :urination_actual_time, :urination, :bowel_sizing, :bowel_movement, :humidity, :wind, :clouds, :temp, :sweat_rate,:is_include)
+		end
+
   
 		def fetch_data sports_id
 			Activities.where(user_id: current_user.id, :sports_id => sports_id).all.to_json
@@ -306,7 +481,7 @@ end
 	  		mm_ss = convert_sec_to_min(hh_mm_ss[2])
 	  		hh_mm = convert_sec_to_min(hh_mm_ss[1].to_i + mm_ss[0])
 
-	  		params["duration"] = "#{pad(hh_mm_ss[0].to_i + hh_mm[0])}:#{pad(hh_mm[1])}:#{pad(mm_ss[1])}"
+	  	    params["duration"] = "#{pad(hh_mm_ss[0].to_i + hh_mm[0])}:#{pad(hh_mm[1])}:#{pad(mm_ss[1])}"
 	  	end
 
 	  	# def time_calc_pace

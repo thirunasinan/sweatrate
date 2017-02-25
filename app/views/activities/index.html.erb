@@ -201,7 +201,7 @@
    var Checked = false;
   
   if(chkAll.is(':checked')){
-    console.log('checked');
+   
     $('input[name="chkInclude"]').each(function(i,v){
 
          $(this).prop('checked',true);
@@ -264,11 +264,11 @@
          <div className="col-md-6 col-md-offset-6  text-right form-group form-inline">
 
           <div className="form-group">  
-               <a className="btn" href="/activities.csv"><i className="fa fa-file-excel-o"></i>&nbsp;Export Excel</a>
+               <a className="btn" href="/activities.xls"><i className="fa fa-file-excel-o"></i>&nbsp;Export Excel</a>
             </div>
       
          <div className="form-group">  
-               <a className="btn" href="/activities.xls"><i className="fa fa-file-code-o"></i>&nbsp;Export CSV</a>
+               <a className="btn" href="/activities.csv"><i className="fa fa-file-code-o"></i>&nbsp;Export CSV</a>
             </div>
         </div>
 

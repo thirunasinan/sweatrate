@@ -1,6 +1,5 @@
 class Sports < ActiveRecord::Base
 
-	self.table_name= "sports"	
-
-	has_many :activities
+	self.table_name= "sports"
+	
 end

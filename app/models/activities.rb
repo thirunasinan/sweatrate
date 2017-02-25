@@ -1,8 +1,6 @@
 class Activities < ActiveRecord::Base
 	
-  self.table_name= "activities"
-
-  belongs_to :sport
+  self.table_name= "activities" 
 
   validates :date, presence: true
   validates :time, presence: true
